@@ -1,0 +1,17 @@
+preset: snow_forest
+parallax:
+  fraction: 0.003
+  response_seconds: 0.25
+effects:
+  - type: snow
+    count: 90
+    intensity: 0.35
+    speed_px_s: 25
+    size_px: 3
+    exclude_person: true
+  - type: fog
+    count: 4
+    intensity: 0.05
+    size_px: 30
+    speed_px_s: 2
+    exclude_person: true

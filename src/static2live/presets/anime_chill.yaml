@@ -1,0 +1,21 @@
+preset: anime_chill
+parallax:
+  fraction: 0.002
+  response_seconds: 0.25
+effects:
+  - type: dust
+    count: 24
+    intensity: 0.15
+    speed_px_s: 5
+    exclude_person: true
+  - type: glow
+    region: glow
+    intensity: 0.12
+    period_seconds: 10
+    exclude_person: true
+  - type: cloud_drift
+    region: cloud
+    amplitude_px: 0.25
+    intensity: 0.3
+    period_seconds: 30
+    exclude_person: true

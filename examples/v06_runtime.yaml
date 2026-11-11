@@ -1,0 +1,17 @@
+# Web runtime only. Original RGB is preserved; audio is opt-in.
+performance_profile: balanced
+display:
+  # Normalized virtual desktop: x, y, width, height (top-left origin).
+  # Two equal monitors: left [0, 0, 0.5, 1], right [0.5, 0, 0.5, 1].
+  viewport: [0, 0, 1, 1]
+audio:
+  enabled: false
+  strength: 0.08
+  response_seconds: 0.15
+  region: full
+shader:
+  # warm_glow / neon_pulse require glow; water_ripple requires water mask.
+  preset: none
+  strength: 0.25
+  amplitude_px: 1
+  period_seconds: 8

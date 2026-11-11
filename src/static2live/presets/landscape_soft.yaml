@@ -1,0 +1,4 @@
+preset: landscape_soft
+parallax:
+  fraction: 0.004
+  response_seconds: 0.18

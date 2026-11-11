@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "static2live"
+version = "0.3.0"
+description = "Local depth-based interactive web wallpapers"
+requires-python = ">=3.10"
+license = "MIT"
+readme = "README.md"
+dependencies = ["Pillow>=10", "numpy>=1.24", "PyYAML>=6", "jsonschema>=4.20"]
+
+[project.optional-dependencies]
+depth = ["torch>=2.2", "transformers>=4.45,<5", "huggingface-hub>=0.25,<1", "safetensors>=0.4"]
+smart = ["torch>=2.2", "transformers>=4.45,<5", "huggingface-hub>=0.25,<1", "safetensors>=0.4"]
+dev = ["pytest>=8", "playwright>=1.45", "build>=1"]
+
+[project.scripts]
+static2live = "static2live.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+static2live = ["web/*", "presets/*.yaml", "native/*.vert", "native/*.frag"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

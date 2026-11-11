@@ -1,0 +1,10 @@
+preset: rainy_city
+parallax:
+  fraction: 0.003
+  response_seconds: 0.15
+effects:
+  - type: rain
+    count: 160
+    intensity: 0.4
+    speed_px_s: 240
+    size_px: 16

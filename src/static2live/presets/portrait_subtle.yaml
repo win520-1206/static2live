@@ -1,0 +1,4 @@
+preset: portrait_subtle
+parallax:
+  fraction: 0.002
+  response_seconds: 0.2

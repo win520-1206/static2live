@@ -1,0 +1,10 @@
+preset: snow_soft
+parallax:
+  fraction: 0.004
+  response_seconds: 0.18
+effects:
+  - type: snow
+    count: 90
+    intensity: 0.4
+    speed_px_s: 30
+    size_px: 3

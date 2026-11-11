@@ -1,0 +1,4 @@
+preset: general_balanced
+parallax:
+  fraction: 0.003
+  response_seconds: 0.15

@@ -1,0 +1,16 @@
+preset: cyberpunk
+parallax:
+  fraction: 0.003
+  response_seconds: 0.15
+shader:
+  preset: neon_pulse
+  strength: 0.4
+  amplitude_px: 0.5
+  period_seconds: 6
+effects:
+  - type: rain
+    count: 100
+    intensity: 0.25
+    speed_px_s: 180
+    size_px: 12
+    exclude_person: true

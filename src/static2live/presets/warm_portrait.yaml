@@ -1,0 +1,11 @@
+preset: warm_portrait
+parallax:
+  fraction: 0.002
+  response_seconds: 0.2
+effects:
+  - type: dust
+    count: 72
+    intensity: 0.35
+    speed_px_s: 9
+    size_px: 2
+    exclude_person: true
