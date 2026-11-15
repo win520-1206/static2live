@@ -1,5 +1,15 @@
 # V1完成审计：原规格对照
 
+2026-11-13 竖屏增量。用户否定留边的填充显示，明确选择覆盖裁切铺满，并确认铺满、人物位置由用户手动调整。实体双屏逐屏动态与宿主裁切适配已有对应源用户证据，连续拼接和时钟同步未测。测试后恢复本日原壁纸，配置选择与备份一致。详情仅存本机local-acceptance/portrait-cover-observation-20261113.md。照片Web工具技术检查及原规格其余差距继续保持明确范围。
+
+2026-11-12 音频与实体双屏增量。独立纯暗色合成源在真实播放同期出现局部暖色增亮，中央保护块保持暗色，结束后恢复基线，该源原生audio_runtime已录入passed。获授权临时将用户标注新版用于两块实体屏幕，用户确认动态正常，但16:9覆盖显示在竖屏裁去部分人物。尝试宿主填充显示，调整后外观仍待确认。两屏原壁纸与布局已恢复并核对配置一致，QA资源已还原。skill参考补入纯色音频诊断、逐屏状态恢复和证据范围，基础校验有效，更新后配方专项2 passed。完整V1仍需处理竖屏构图确认、受限照片技术浏览器证据及其余规格差距。详细证据仅存本机local-acceptance/audio-flat-observation-20261112.md和physical-displays-observation-20261112.md。
+
+2026-11-12 原生增量。用户标注新版已实际完成原生加载、鼠标四角、粒子开关和零强度、发梢隔离对照，用户确认发梢轻摆且脸稳定。默认设置间歇观察624.480秒，54项资源前后精确一致。该源native_runtime已录入passed，整体仍not_tested。完整合成回归重试202 passed、0跳过、232.11秒，首次受限中断保留。窗口跨实体屏幕迁移仍运行，但狭长编辑器视口裁切，不计实体跨屏通过。已恢复原认可人像预览。详细证据保存在本机local-acceptance/user-regions-native-20261112.md。
+
+2026-11-12 增量。用户按提供的检查步骤确认上一轮 Smart 样例的 Web 发梢、粒子、脸部、视差连续性、四角和缩放均正常，记为该源的用户报告通过。用户提供真实编辑器导出的 JSON，比较确认人物区域有实际像素修改，导入后生成独立 Web 与原生版本。七个区域的裁切转换逐像素一致，保护区内局部 sway 权重为零，结构验证通过。用户随后对标注再生成版的发梢、脸部、粒子与鼠标衔接明确回复“一切正常”，该新版Web主观视觉已获用户报告通过。实体多屏及音频视觉仍待各自证据。工具 browser_runtime 尚无该照片源的机器通过证据，未改写为完整通过。详情保留在本机 local-acceptance/user-web-editor-feedback-20261112.md，软件仍为 0.3.0 开发版。
+
+2026-11-11 增量。新 Smart 源已在原生编辑器实际加载，观察到多处暖尘、粒子关闭与恢复、四角填满。发梢可辨性、完整属性对照与该源长期运行仍待补齐。音频取得实际播放期间的五帧观察，用户确认听到声音，但增亮未获明确确认，音频视觉仍为 not_tested。照片 file 入口被当前浏览器工具安全策略拒绝，照片 Web、实际蒙版编辑及实体多屏继续待验收。已恢复原认可人像的运行预览，源与 QA 的 54 项资源一致。详细证据保存在本机 local-acceptance/v1-closure-observation-20261111.md，未包含在公开仓库中。软件继续保持 0.3.0 开发版本。
+
 > 历史验收摘要来自维护者本地记录。文中 `local-acceptance/`、`output/` 和标注产物保留在本地，公开仓库提供源码与合成示例。测试结果按记录日期和所列范围解释，完整 V1 验收仍在进行。
 
 
@@ -31,37 +41,37 @@ pan/zoom/rotate/distortion各完成独立真实原生生成。pan a590d9f4…已
 
 | 原规格 | 当前实现/证据 | 完成判断及下一动作 |
 | --- | --- | --- |
-| 1、5、10、39 自动分析到输出 | analyzer.py、planning.py、pipeline.py；真实CPU三模型生成v1-wallpapers照片v001，自动warm_portrait | 实现并真实生成；完整实际运行尚未通过 |
+| 1、5、10、39 自动分析到输出 | analyzer.py、planning.py、pipeline.py；真实CPU三模型生成v1-wallpapers照片v001，自动warm_portrait | 真实三模型离线生成已完成，用户标注新版原生基础运行通过；跨目标整体报告仍保留未测项 |
 | 2、3、21、48 非视频、本地优先、可选WE | 无视频生成依赖；模型显式准备、生成离线；Lite可关闭视差无模型；原生不可用退Web测试 | 已有测试证据，不要求补MP4或云服务 |
-| 4.1、8 RGB保真、统一坐标 | 规范RGB、所有区域共画布；覆盖板RGB/Alpha重算验证，test_v04/test_planning | 结构与合成证据通过；实际边缘审美需观察 |
-| 4.2、4.3、16 保护与局部发梢 | FASHN/导入区域、保守保护、sway权重、编辑器；test_sway/test_v04 | 开发实现；旧v005用户认可，不能泛化新V1通过 |
+| 4.1、8 RGB保真、统一坐标 | 规范RGB、所有区域共画布；覆盖板RGB/Alpha重算验证，test_v04/test_planning | 结构与合成证据通过，对应照片源的Web外观与原生脸发连续性已有用户反馈和实际观察 |
+| 4.2、4.3、16 保护与局部发梢 | FASHN/导入区域、保守保护、sway权重、编辑器；test_sway/test_v04 | 用户标注新版发梢轻摆与脸部稳定已获原生反馈，权重保护已验证；衣料独立可辨性未测 |
 | 4.4、25、26 Validator/Manifest | validator.py、browser_check.py、native记录；资源/配置/版本绑定 | 测试通过；新V1完整状态保持not_tested |
 | 6 解耦Motion | 0.2/0.4/0.6契约，Renderer消费资源不重新分析 | 已实现；示例JSON版本1.0不强制旧输出改版 |
 | 7、30、31 可替换模型 | DepthBackend/SegmentationBackend、真实本地模型、官方revision/license/hash | 已实现；类别覆盖有限，不能宣称text等全自动识别 |
 | 9 背景补全 | 当前No Inpaint、小视差 | 规格明示可选，不凭此删减其它必需项；不宣称重建隐藏背景 |
-| 11 可复用Motion Primitive | 深度、sway、ripple、drift、pulse/glow、粒子及新增float/pan/zoom/rotate/wave/distortion；primitives.py共享GLSL | 已有六种新原语Web像素与原生结构专项；原生逐个GPU运行未测，一次选择一种高级Shader，不宣称无限图层叠加 |
-| 12–15 Sway/Parallax/Ripple/Pulse | sway.py、runtime.js、native_runtime.py/Shader | 合成像素/保护检查通过；宿主高级效果仍需实际控制检查 |
+| 11 可复用Motion Primitive | 深度、sway、ripple、drift、pulse/glow、粒子及新增float/pan/zoom/rotate/wave/distortion；primitives.py共享GLSL | 六种新原语已有各自合成源的Web像素和原生GPU运动/保护/属性证据，详见MOTION_PRIMITIVES.md；一次选择一种高级Shader |
+| 12–15 Sway/Parallax/Ripple/Pulse | sway.py、runtime.js、native_runtime.py/Shader | 合成像素/保护检查及对应原生合成源控制对照已取得，按各模式独立Manifest解释 |
 | 17、34 粒子与基础效果 | rain/snow/fog/dust/glow/cloud_drift；原生dust/snow/rain映射等 | 基础六类有测试；firefly/spark/stars为推荐未实现，不伪装别名支持 |
-| 18 Web标准Runtime | 离线嵌入配置/纹理、WebGL、静态降级、鼠标、音频 | 合成浏览器回归；实际照片视觉受访问限制仍未测，不换工具绕过 |
-| 19、20、35 原生可选Adapter | 合法模板、编译纹理、引用、保护pass、粒子和属性 | 新V1实际显示；属性开关/完整运动验收待完成 |
+| 18 Web标准Runtime | 离线嵌入配置/纹理、WebGL、静态降级、鼠标、音频 | 合成浏览器回归通过，实际照片Web获明确版本的用户正常反馈，工具技术检查仍受限 |
+| 19、20、35 原生可选Adapter | 合法模板、编译纹理、引用、保护pass、粒子和属性 | 用户标注新版已录入原生基础运行通过，含粒子/发梢/鼠标和属性；默认设置624.480秒间歇观察 |
 | 22、40 Preset | 已打包9个名称，包括anime_chill/snow_forest/cyberpunk | 真配置生成有测试；树木摇摆、Light Ray等参考效果未等价实现，需明确能力或补齐 |
-| 23、42 薄skill | SKILL.md自然语言映射、CLI、分级验收、失败处理、无静默下载/覆盖 | 语法和部分调用通过；最终完整行为演练待完成 |
+| 23、42 薄skill | SKILL.md自然语言映射、CLI、分级验收、失败处理、无静默下载/覆盖 | 基础校验与配方通过，主Agent按skill真实三模型生成已执行；独立Agent行为评估未执行 |
 | 24 CLI | 快捷输入、generate、analyze、models、annotate、validate等 | 安装后任意CWD测试；旧示例合法命令保留 |
 | 27、32、41 非破坏、优先级、可复现 | 原子版本分配、受控覆盖；CLI>YAML>Preset>建议>默认；哈希和依赖版本 | 128项回归包含并发/输入/覆盖/优先级；本机原图哈希未变 |
-| 28、37 可视化编辑器 | Brush/Erase/Protect/Animate、撤销/缩放、原子导入、显式空蒙版 | 合成真实浏览器保存再导入通过；照片编辑体验未测 |
-| 29、43、49 结构与阶段顺序 | Python包、模块、测试、README/LICENSE、薄skill和阶段文档 | 功能按阶段推进；推荐目录不逐项创建空模块，不创建远端GitHub |
+| 28、37 可视化编辑器 | Brush/Erase/Protect/Animate、撤销/缩放、原子导入、显式空蒙版 | 合成真实浏览器保存再导入通过，实际照片人工修改、导出、再生成及新版用户视觉反馈已取得 |
+| 29、43、49 结构与阶段顺序 | Python包、模块、测试、README/LICENSE、薄skill和阶段文档 | 功能按阶段推进，已有公开开发源码仓库，推荐目录按实际用途组织 |
 | 33、44、45 V0.1及测试 | tests/test_core/test_browser，旧真实模型和浏览器记录 | 维护回归；旧成功不自动升级为新V1视觉通过 |
-| 36 Human Parsing | 真实FASHN、许可、face/hair/cloth/hands，源RGB保留 | CPU真实生成完成；当前V1的时间运动仍需观察 |
-| 38 Audio/Performance/Multi-monitor/Shaders | Web性能像素/帧/粒子预算、标准化viewport、真FFT、三Shader；原生音频/Shader接入 | 合成Web通过；真实宿主音频/属性和真实多屏未通过；原生性能/跨屏映射仍有unsupported |
+| 36 Human Parsing | 真实FASHN、许可、face/hair/cloth/hands，源RGB保留 | CPU真实生成完成，用户标注新版发梢时间运动与脸部稳定已获实际原生反馈 |
+| 38 Audio/Performance/Multi-monitor/Shaders | Web性能像素/帧/粒子预算、标准化viewport、真FFT、三Shader；原生音频/Shader接入 | 合成Web通过，独立纯色源原生音频已实际通过，实体双屏动态正常，用户确认竖屏采用覆盖裁切铺满及手动取景，原生性能/跨屏映射仍有unsupported |
 | 46 README、47竞争力 | 已写实现/限制与路线；自动规划依据可解释 | 最终说明需与最终实际能力再核对，不用README代替验收 |
 
-## 下一个完整门槛
+## 当前剩余范围（2026-11-15）
 
-1. 对当前V1源Manifest绑定实际原生属性、鼠标和发梢证据，不复制旧版本验收。
-2. 处理宽比例预览裁头的适配/说明并验证；不为了“无黑边”默认为主体裁切通过。
-3. 实际照片Web/编辑体验、宿主音频及真实多屏按允许渠道验证，受限就保持未测。
-4. 原规格Primitive、参考Preset高级效果及原生V0.6差距逐项处理，不能靠绿色回归跳过。
-5. 最终安装、skill实际端到端调用与逐项审计后，再决定是否满足完整V1。
+- 实际照片 Web 已获用户正常反馈，工具协议策略仍阻止该本地照片页面的技术浏览器检查。保留其 browser_runtime 未测状态及用户反馈记录。
+- 实体双屏已验证逐屏动态与手动覆盖裁切。连续拼接和多实例时钟同步未测，当前不承诺多实例动画锁相。
+- 衣料0.35画布像素的独立主观可辨性、精确帧率和显存未测。原生性能配置和虚拟桌面裁切仍交由宿主，未映射项如实列出。
+- 推荐风格中的树木自动识别、独立光线束等参考效果尚未实现，当前Preset能力按README实列。背景补全仍是原规格可选项。
+- 软件保留0.3.0开发版本。分发包与最终安装检查按当前快照另记，不把开发快照包装成V1正式发布。
 
 ## 新增证据与剩余区别
 
