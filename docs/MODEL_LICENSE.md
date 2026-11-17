@@ -9,6 +9,8 @@ V0.3 原生生成会在本地输出中复制已安装 Wallpaper Engine 的官方
 
 V0.2 Smart：[SegFormer B0 ADE](https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512)，使用 [NVIDIA Source Code License for SegFormer](https://raw.githubusercontent.com/NVlabs/SegFormer/master/LICENSE)，限非商业研究/评估，不是 Apache-2.0 或项目 MIT。准备需 --accept-model-license，保留官方 LICENSE.txt、固定 revision 和文件哈希。模型预测不保证精细人像准确。
 
+人物解析使用[FASHN Human Parser](https://huggingface.co/fashn-ai/fashn-human-parser)，上游模型卡标注NVIDIA SegFormer许可，限非商业研究/评估。首次准备同样需接受独立模型许可，缓存中保留固定revision、LICENSE.txt与文件哈希。具体推理与预处理范围见[V0.4实施说明](V0.4_IMPLEMENTATION.md)。
+
 下载缓慢时显式切换 --download-endpoint https://hf-mirror.com，仍以官方元数据确定固定版本和预期哈希。元数据不可达或校验失败停止，不关闭 TLS。镜像不改变许可，不发送照片。本次真实下载使用官方源；镜像路径仅模拟验证。
 
 默认模型：[depth-anything/Depth-Anything-V2-Small-hf](https://huggingface.co/depth-anything/Depth-Anything-V2-Small-hf)。官方模型卡标注 Apache-2.0。这里只选择 Small，不能将此许可推及其他尺寸或第三方模型。

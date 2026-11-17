@@ -1,166 +1,237 @@
 # Static2Live
 
-当前开发快照版本为 `0.3.0`。截至2026-11-15，合成回归202项通过；实际照片已完成用户Web视觉反馈、标注导出再生成、原生发梢/粒子/鼠标检查及十分钟以上运行抽查。独立合成源已验证原生音频响应，实体双屏逐屏动态及覆盖裁切铺满获用户确认。照片浏览器技术检查受工具协议策略限制，连续拼接与时钟同步未测，原生性能/虚拟裁切仍有未映射项。完整状态见[当前需求审计](docs/V1_REQUIREMENT_AUDIT.md)。
+[简体中文](README.md) | [English](README_EN.md)
 
-开发进度：V0.4人物摇摆分项验证中，另已实现[V0.5离线蒙版编辑器](docs/V0.5_IMPLEMENTATION.md)开发接口（保护/运动源、撤销、缩放），不代表全部视觉验收通过。发布包版本暂不提升。
+**把静态图片变成可交互动态壁纸。**
 
-[V0.6 Web运行时扩展](docs/V0.6_IMPLEMENTATION.md)正在开发：性能档、虚拟桌面裁切、局部Shader和可选本地音频响应；原生适配与完整运行验收尚未完成。
+Static2Live 在本地分析图片，通过深度、区域蒙版和程序化运动生成实时壁纸。支持离线 Web 与可选的 Wallpaper Engine 原生场景输出。
 
-[V1.0自动分析与推荐](docs/V1.0_IMPLEMENTATION.md)开发接口已加入：`analyze --input IMAGE`只分析，生成默认自动规划，`--no-auto-plan`可关闭。推荐依据写入analysis.json并由Validator复算，缺模型不自动下载或假降级。尚未通过完整V1.0验收。
+`v1.0.0` · Python 3.10+ · MIT 代码许可
 
-[有界局部运动原语](docs/MOTION_PRIMITIVES.md)新增float/pan/zoom/rotate/wave/distortion：需要明确other蒙版，保护区保持不动；六种均有Web像素测试和各自合成源的原生GPU局部运动、保护区、开关及零强度观察。它们不代表照片或整个V1通过；当前门槛见[原规格审计](docs/V1_REQUIREMENT_AUDIT.md)。旧规划算法可继续验证，不改写旧输出。
+[快速开始](#快速开始) · [核心功能](#核心功能) · [工作原理](#工作原理) · [文档](#文档)
 
-本地图片 → 离线 Web 或原生 Wallpaper Engine Scene。V0.3 新增基于合法编辑器模板与真实纹理编译器的可选 Adapter；保留 Lite / Smart、Web 的六种效果及离线标注。代码 MIT，模型及引擎素材单独许可。不是视频生成器。
+![Web 深度视差演示](assets/demo/depth-parallax.gif)
 
-## V0.3 原生 Adapter
+Web 运行时实际录制。程序生成的 CC0 风景配合显式已知深度，指针左右移动时近远区域产生不同位移。此演示使用 Lite 与外部深度图。[原始图片](assets/demo/landscape-source.png)
+
+## 效果展示
+
+### 局部运动与保护
+
+![局部发梢运动示意](assets/demo/portrait-motion.gif)
+
+程序绘制的人物示意，使用 Lite、显式头发区域和面部保护蒙版，在 Web 中演示发梢局部 UV 运动。蒙版由示例代码提供，人物模型准确度另有真实照片验收记录。[原始图片](assets/demo/portrait-source.png)
+
+### 环境粒子
+
+![Web 雪粒子效果](assets/demo/particle-effects.gif)
+
+同一幅风景上的程序化雪粒子，使用 Lite 与 Web Canvas。素材和全部动态帧由本项目生成。
+
+三组 GIF 均录制自实际 Web 运行时，统一为 768×512、约 12 FPS、5 秒。深度和区域属于显式测试数据，来源与复现步骤见[演示说明](assets/demo/README.md)。
+
+## 项目简介
+
+输入一张图片后，Static2Live 统一方向、尺寸与裁切坐标，读取本地深度模型、区域模型或用户蒙版，再生成可检查的运动规划和资源清单。WebGL 和 Canvas 根据这些资源实时响应指针和时间。
+
+Python 包与 CLI 负责分析和生成。附带的薄 skill 将自然语言要求映射为 Preset、区域和参数，调用同一套 CLI。你也可以直接使用命令行或 YAML。
+
+## 核心功能
+
+| 功能 | 可以做什么 | 1.0 状态 |
+| --- | --- | --- |
+| 深度视差 | 以局部 UV 位移和有界采样响应鼠标 | 已实现，真实照片与浏览器验证 |
+| Lite | 手工区域、规则候选、可选外部深度 | 已实现，关闭视差可完全无模型 |
+| Smart | 本地预测人物、天空、水面，支持人物细分类 | 已实现，预测需检查及按需修正 |
+| 发梢与衣料 | 根部锚定、局部权重及保护区域 | 已实现，已有对应照片用户反馈 |
+| 粒子与区域效果 | 雨、雪、尘、雾、Glow、Cloud Drift | Web 已实现，原生支持范围见下文 |
+| 离线区域编辑 | 画笔、擦除、保护、运动源、撤销及缩放 | 已实现，编辑后重新生成 |
+| 自动规划 | 根据区域证据推荐 Preset 与保守运动参数 | 已实现，显式用户配置优先 |
+| 高级运行时 | 可选音频响应、性能档、虚拟 viewport、局部 Shader | 已实现，验收与宿主支持分别记录 |
+| 原生 Adapter | 使用本机合法模板与编译器输出完整场景依赖 | 已实现，依赖 Wallpaper Engine 环境 |
+
+## 快速开始
+
+安装依赖首次需要联网。准备模型需要显式下载，生成与 Web 播放可离线运行。以下命令从仓库根目录执行。
+
+### A. 先体验粒子，无需模型
+
+Windows PowerShell，Python 3.10+。
 
 ```powershell
-static2live photo.jpg --target wallpaper-engine --mode smart --preset warm_portrait --model-cache models
-# 非标准安装目录或合法同结构模板
-static2live photo.jpg --target wallpaper-engine --engine-path "D:\SteamLibrary\steamapps\common\wallpaper_engine" --we-template TEMPLATE
-static2live preview-native VERSION
-```
-
-默认只读使用本机官方 Depth Parallax 编辑器模板，复制到新输出，编译图片/深度/粒子纹理为真正 .tex，包含模型、材质与完整效果依赖。深度位移采用项目自有的有界 UV Shader，不平移整个相机；Shader 随包提供，需另行实际引擎验收。无安装/编译器/模板时保留 Web Export 并记录明确 warning、actual:web；模板损坏或实际编译失败不伪造成功。
-
-原生入口 VERSION/wallpaper-engine/project.json，Web 备用为 VERSION/index.html。不会自动安装进 myprojects、替换桌面或发布。preview-native 使用独立 QA 窗口；发送命令不等于运行通过。可用编辑器“打开项目”选择 project.json。
-
-原生优先映射深度视差、全画布雨/雪/尘/柔雾粒子与用户属性；原生粒子由引擎随机化，不与 Web 固定 seed 像素一致。局部粒子、Glow、Cloud Drift 仍完整保留在 Web，但原生明确列入 unsupported / warning，不宣称已映射。人物排除用同源像素覆盖板与同一视差效果，不是背景重建；混合排除语义会 warning。
-
-可选 Foliage Sway 仅映射用户已确认的 other 蒙版：用 annotate 手画/导入植物等区域，再加 --native-sway --sway-amplitude-px 1 --regions JSON。默认关闭；不自动分析头发、衣料或脸部。幅度0–4画布像素且不超过短边1%。此 native-only 选项不是 V0.4 Human Parsing。缺蒙版拒绝，不强行作用整图。
-
-属性面板：鼠标视差开关、视差强度0–100%、粒子开关、粒子强度0–100%；选用摇摆时另有摇摆开关/强度。原生 runtime 与 Web browser 检查分离；原生只在实际观察加载、四角、属性、鼠标及相关效果后记录：
-
-```powershell
-static2live validate VERSION --browser
-# 观察 Web 后 record-visual；观察原生后才执行下条，check 项须确实检查过
-static2live record-native VERSION --check load --check mouse --check edges --check properties --check particles --note "实际观察结果"
-```
-
-没完成原生观察，native_runtime 保持 not_tested，不能宣称 V0.3 完整验收。详见 [V0.3 实施说明](docs/V0.3_IMPLEMENTATION.md) 与 [本机验收](docs/V0.3_ACCEPTANCE.md)。复制的引擎模板/着色器仅按引擎许可本地使用，不以 MIT 重新许可或打包到软件分发。
-
-## 安装（Python 3.10+）
-
-```powershell
+git clone https://github.com/win520-1206/static2live.git
+cd static2live
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install .
-# 按需要安装可选本地模型依赖
+.\.venv\Scripts\python.exe -m static2live --help
+.\.venv\Scripts\python.exe -m static2live assets/demo/landscape-source.png --mode lite --no-parallax --effect dust
+```
+
+首次结果位于 `output/landscape-source/v001/`。双击其中的 `index.html` 查看，检查报告保存在 `validation.json`。再次生成会得到 `v002/` 等新目录。
+
+PyPI 连接缓慢时，可在本次安装命令末尾加 `--index-url https://pypi.tuna.tsinghua.edu.cn/simple` 使用清华镜像。本轮干净环境安装采用该镜像验证完成。
+
+Linux/macOS 可用 `.venv/bin/python` 替换 Python 路径。当前实际宿主验收来自 Windows，原生 Adapter 面向本机 Wallpaper Engine 安装环境。
+
+### B. 准备本地模型，体验深度视差
+
+沿用上一步虚拟环境，安装 PyTorch、Transformers 等可选依赖，再显式准备深度模型。
+
+```powershell
 .\.venv\Scripts\python.exe -m pip install ".[depth]"
-.\.venv\Scripts\python.exe -m pip install ".[smart]"
+.\.venv\Scripts\python.exe -m static2live models prepare --kind depth --model-cache models
+.\.venv\Scripts\python.exe -m static2live assets/demo/landscape-source.png --mode lite --model-cache models --output output/depth
 ```
 
-建议使用独立虚拟环境安装。Windows 中文路径遇到 editable 安装编码问题时可使用普通 wheel 安装。命令入口为 static2live。
+模型缓存在 `models/`，结果位于 `output/depth/landscape-source/v001/`。默认 CPU，支持显式 `--device cuda`。模型准备完成后的生成只读缓存。
 
-## Lite：无需分割模型
+已有深度图可使用 `--depth-map depth.png`。深度图须匹配 EXIF 转正后的原图尺寸，8 位单通道、白色更近。首次下载慢时可显式使用国内镜像，仍校验官方 revision 与哈希，详见[模型准备](references/workflow.md#下载慢时换国内镜像)。
 
-完全无模型需显式关闭视差：
+生成失败时先查看 CLI 错误及 `validation.json`，再读[工作流](references/workflow.md)或[原生排错](references/native-qa.md)。
+
+## 工作原理
+
+```mermaid
+flowchart TD
+    A[静态图片] --> B[方向、尺寸与裁切对齐]
+    B --> C[可选本地深度估计]
+    B --> D[Smart 区域与人物解析]
+    B --> E[Lite 人工或规则区域]
+    C --> F[自动分析与 Motion Planner]
+    D --> F
+    E --> F
+    F --> G[Motion Manifest 与资源]
+    G --> H[WebGL / Canvas]
+    G --> I[可选 Wallpaper Engine Adapter]
+    H --> J[分层 Validator 与验收报告]
+    I --> J
+```
+
+`analyzer.py` 统一像素与区域来源，`planning.py` 推荐运动，`motion.py` 描述画布和参数。Renderer 消费生成资源，Adapter 处理宿主依赖，Validator 核对配置、哈希及运行证据。详细实现见[自动规划](docs/V1.0_IMPLEMENTATION.md)。
+
+## 常见用法
+
+下面用 `static2live` 表示已激活环境中的命令。也可替换为 `.\.venv\Scripts\python.exe -m static2live`。
 
 ```powershell
-static2live photo.jpg --mode lite --no-parallax --effect dust
+# 只分析并推荐，关闭视差可省去深度模型
+static2live analyze --input photo.jpg --no-parallax
+
+# 创建离线区域编辑器，保存 regions.json 后重新生成
 static2live annotate --input photo.jpg --output annotations
-```
+static2live photo.jpg --mode lite --no-parallax --regions regions.json --effect dust
 
-打开标注 index.html，选择人物/天空/水面/云层/发光区域/其他，画笔、擦除、清除、保存 regions.json。规则仅是亮度/蓝色候选，须预览确认，不是语义识别。再运行：
-
-```powershell
-static2live photo.jpg --mode lite --no-parallax --regions saved-regions.json --effect glow
-```
-
-Lite 保留视差仍需本地深度模型或 --depth-map，不伪造深度。
-
-## Smart：本地自动识别
-
-SegFormer B0 ADE 预测人物、天空、水面；不自动识别 cloud 或 glow。**NVIDIA 许可限非商业研究/评估，不是 MIT 商用权重授权。** 首次准备显式联网，照片不上传，生成只读本地缓存：
-
-```powershell
-static2live models prepare --kind segmentation --model-cache models --accept-model-license
-static2live models prepare --kind depth --model-cache models
+# 已准备模型后自动识别人物、天空和水面
 static2live photo.jpg --mode smart --preset warm_portrait --model-cache models
+
+# 本地人物解析及可选原生场景输出
+static2live photo.jpg --mode smart --human-parsing --target wallpaper-engine --model-cache models
+
+# 横屏取景，顶部优先保留头顶
+static2live photo.jpg --crop-aspect 16:9 --crop-anchor top
 ```
 
-无需深度加 --no-parallax。缺模型报错，不下载或回退。修正预测：`annotate --input photo.jpg --regions VERSION/assets/regions.json`，保存新 JSON 后通过 --regions 生成；同类人工区域覆盖预测并记录来源。
+Smart 及人物解析首次需分别准备 segmentation 和 human-parsing 模型，并接受对应许可。具体命令见[人物解析](docs/V0.4_IMPLEMENTATION.md)和[完整工作流](references/workflow.md)。
 
-下载慢时停止后沿用同一缓存，显式换国内镜像：
+优先级为 CLI > 用户 YAML > 所选 Preset > 自动建议 > 默认值。`--strength` 的单位是画布短边比例，最大 `0.01`。发梢与衣料参数使用画布像素，详细单位见工作流。用户关闭效果或设置零强度会保留在配置中。
+
+## 输出结构
+
+```text
+output/landscape-source/v001/
+├── index.html
+├── style.css
+├── runtime.js
+├── effects.js
+├── assets/
+├── config.yaml
+├── analysis.json
+├── motion.json
+├── manifest.json
+└── validation.json
+```
+
+`index.html` 是离线 Web 入口，`assets/` 保存图像及按需生成的深度和蒙版。`analysis.json` 记录来源与推荐，`motion.json` 记录动画，`manifest.json` 记录版本与资源哈希，`validation.json` 保存检查状态。
+
+原生目标另有 `native-plan.json` 和 `wallpaper-engine/project.json`。无可用引擎、模板或编译器时保留 Web 输出，并记录 `actual:web` 和 warning。实际编译错误会报错。原生粒子及属性支持、未映射项以 `native-plan.json` 为准。
+
+## 验证体系
+
+| 层级 | 检查内容 | 证据 |
+| --- | --- | --- |
+| Structural | 资源、尺寸、参数、引用及哈希 | 自动结构检查 |
+| Browser Runtime | WebGL 启动、像素变化、边缘、零强度及降级 | 实际 Chromium 运行 |
+| Visual Acceptance | 连续性、自然度及局部伪影 | 明确版本的人工观察 |
+| Native Runtime | 宿主加载、交互、属性及能力分项 | 实际 Wallpaper Engine 观察 |
+
+状态采用 `passed / warning / failed / not_tested`。生成、浏览器和人工观察分别记录，每个新 Manifest 保留自身验收状态。截图证据单独版本化。
+
+2026-11-17 的 1.0 本地安装包完整回归为 **220 项通过**，包含启用的合成浏览器测试。最终源码包核心与 skill 工作流另有 28 项通过。真实照片、独立原生音频及实体双屏证据的范围见[1.0 说明](docs/V1.0_RELEASE.md)和[需求审计](docs/V1_REQUIREMENT_AUDIT.md)，原始私人素材及本机记录保留在维护者本机。
+
+## 功能状态与限制
+
+- 相对深度用于有界原图采样，遮挡后的背景仍不可见。人物解析是粗类别预测，散发和边缘可能需要人工修正。
+- 自动推荐较保守。已认可的 Smart 样例整体自然、人物连续且脸稳定，默认衣料的独立可辨性仍需按素材确认。
+- 原生已接入视差、人物局部运动、全画布雨雪尘雾、属性及可选音频/Shader。局部粒子、Glow、Cloud Drift 等 Web 能力按原生输出的 unsupported 记录处理，两个运行目标呈现可能存在差异。
+- Web 支持性能档与归一化虚拟 viewport；原生性能和裁切由宿主管理。精确原生硬件 FPS、显存及多实例时钟同步仍缺测量或验收。
+- 后续范围包括树木自动识别、独立光线束、精细发丝 Alpha Matting、背景补全、表情和视频导出。
+- skill 已有实际主 Agent 使用与 CLI 配方测试，独立 Agent 行为评估尚待执行。
+
+## 开发与测试
+
+沿用上述环境安装开发依赖。
 
 ```powershell
-static2live models prepare --kind segmentation --model-cache models --accept-model-license --download-endpoint https://hf-mirror.com
-```
+.\.venv\Scripts\python.exe -m pip install ".[dev]"
+.\.venv\Scripts\python.exe -m pytest -q
 
-depth 同样支持该参数。官方元数据确定固定 revision 和预期哈希；镜像仅提供文件。元数据不可达或哈希不符停止，不关闭 TLS。实际下载使用官方源；镜像仅模拟校验测试，未真实下载。见 [许可](docs/MODEL_LICENSE.md)。
-
-## 配置与单位
-
-显式宽屏取景（默认仍保留原比例）：
-
-```powershell
-static2live photo.jpg --crop-aspect 16:9 --crop-anchor top --output output/16x9
-static2live photo.jpg --crop-aspect 3440:1440 --crop-anchor top --output output/ultrawide
-```
-
-顶部锚定会优先保留头顶、裁去下部；不补画画外内容。取景发生在EXIF转正后、推理前，RGB、外部深度和导入蒙版共用源坐标裁切框。YAML为 `framing: {aspect: '16:9', anchor: top}`；anchor还可选center/bottom。不同屏幕比例应单独导出，运行时依旧cover，不能保证单一输出适配任意屏幕。已裁切bundle只允许相同框复用；换比例请用完整原图标注。当前annotate不直接编辑裁切bundle，详见[工作流](references/workflow.md)。每份新输出须重新视觉验收。
-
-优先级 CLI > 用户 YAML > Preset > 自动规划建议 > 默认值。自动规划只补未明确指定项；显式 --effect 列表替换配置效果，不隐式叠加：
-
-```yaml
-preset: portrait_subtle
-mode: lite
-target: web
-device: cpu
-max_edge: 2048
-parallax_enabled: true
-seed: 1337
-parallax:
-  fraction: 0.002
-  response_seconds: 0.2
-effects:
-  - type: dust
-    intensity: 0.35
-    count: 72
-    speed_px_s: 9
-    size_px: 2
-    exclude_person: true
-```
-
-用 --config config.yaml。--strength 是短边比例，最高0.01；0仅停止视差，效果单独关闭。--no-parallax 不产生深度资源。深度图为 EXIF 转正原图同尺寸单通道，白色近，不猜方向。CUDA 需兼容 PyTorch/GPU。
-
-| Preset | 幅度/短边 | 响应常数 | 效果 |
-| --- | --- | --- | --- |
-| portrait_subtle | 0.2% | 0.20秒 | 无 |
-| general_balanced | 0.3% | 0.15秒 | 无 |
-| landscape_soft | 0.4% | 0.18秒 | 无 |
-| warm_portrait | 0.2% | 0.20秒 | 暖尘、人物排除 |
-| rainy_city | 0.3% | 0.15秒 | 雨 |
-| snow_soft | 0.4% | 0.18秒 | 雪 |
-| anime_chill | 0.2% | 0.25秒 | 稀疏尘、局部Glow及Cloud Drift，须有对应区域 |
-| snow_forest | 0.3% | 0.25秒 | 雪与柔雾；尚不含树木摇摆或光线束 |
-| cyberpunk | 0.3% | 0.15秒 | 雨与局部neon_pulse，须有glow区域 |
-
-效果 intensity 0–1，每类 count≤256，speed_px_s 为画布像素/秒，size_px 是雨线长度或其他粒子尺寸。region 默认 full，可指定确认区域；exclude_person 需人物蒙版，缺失 warning，不能宣称五官保护。cloud_drift 需 cloud 蒙版，amplitude_px≤短边1%，period_seconds 为周期。Glow 为区域颜色/亮度脉冲，Fog 为柔雾叠加，不是物理光照或体积重建。
-
-## 输出与验证
-
-默认保持比例、长边≤2048，不裁素材；浏览器 cover 可能裁窗口外区域。画布像素不同于屏幕物理像素。
-
-输出 output/图片名/v001 等，含 HTML/CSS/runtime.js/effects.js、YAML、analysis/motion/manifest/validation、图片、masks/regions.json；Smart 另有 labels.png。双击 HTML，纹理与配置内嵌，无 fetch/CDN。WebGL 失败提示静态降级，不算动态通过；减少动态偏好停止运动。
-
-标注页面单独保存，不修改原图或旧壁纸。--overwrite 只接受受管理的明确版本目录，拒绝输入位置、无关文件与符号链接，替换前备份。通常生成新版本。
-
-```powershell
-python -m pip install ".[dev]"
-$env:PLAYWRIGHT_BROWSERS_PATH = "$PWD\.browsers"
-python -m playwright install chromium
+# 完整浏览器测试需显式安装 Chromium 并开启
+$env:PLAYWRIGHT_BROWSERS_PATH = "$PWD/.browsers"
+.\.venv\Scripts\python.exe -m playwright install chromium
 $env:STATIC2LIVE_BROWSER_TESTS = '1'
-python -m pytest -q
-static2live validate VERSION --browser
-static2live record-visual VERSION --note "实际观察"
+.\.venv\Scripts\python.exe -m pytest -q
 ```
 
-四态 passed/warning/failed/not_tested；结构、浏览器、视觉分离。返回码不等于视觉验收；重新 validate 重置视觉，改资源须重验。视觉记录复核浏览器 Manifest 哈希，不是算法保证。
+未开启浏览器测试时，对应项目会跳过。编辑安装可用 `pip install -e ".[dev]"`，Windows 中文路径遇到安装编码问题时可使用普通安装。
 
-examples/generate_scene.py 生成 CC0 风景与已知区域供六种效果验收，不冒充模型识别。私人素材、模型与本机输出不打包。未发布或全局安装 skill。
+通过 [Issues](https://github.com/win520-1206/static2live/issues) 报告复现步骤、版本、配置与受影响目标，通过 [Pull requests](https://github.com/win520-1206/static2live/pulls) 提交修改。贡献时保留原图、旧输出和模型许可来源，使用合成测试素材，提交前检查私人文件与密钥。
 
-## 边界
+## Roadmap
 
-V0.3基础Adapter本身不含自动发梢或完整编辑器；后续开发接口已有本地人物解析、保护/发梢权重和离线区域编辑，见上方版本说明，尚未完整视觉验收。当前均不含表情、精细发丝Alpha Matting、背景补全或MP4。深度UV不是分层重建；语义预测可能出错，仍须检查人物外观。原生Adapter不保证与Web像素相同。
+- [x] 1.0 分析、规划、双目标输出与验证闭环。
+- [x] 人工区域编辑、Smart 真实模型和已受验人物微动态。
+- [ ] 扩充可公开的真实照片演示及人物边缘案例。
+- [ ] 补齐原生硬件性能测量与多屏连续拼接测试。
+- [ ] 独立 Agent 的 skill 行为评估。
+- [ ] 逐步完善原生支持矩阵、CI 与发行流程。
 
-见 [实施说明](docs/V0.2_IMPLEMENTATION.md)、[本机验收](docs/V0.2_ACCEPTANCE.md)、[设计](docs/V0.2_PLAN.md)、[薄 skill](SKILL.md)。V0.1 文档/输出保留为历史，新 Validator 兼容旧 Manifest。
+## 隐私、许可与致谢
+
+生成和播放在本地执行，首次依赖安装及显式模型准备需要网络。原图保持完整，新输出使用独立版本目录。图片公开展示的权利由素材使用者确认。
+
+| 资源 | 许可与来源 |
+| --- | --- |
+| Static2Live 代码 | [MIT](LICENSE) |
+| README 演示图及 GIF | 本项目程序生成，CC0，见[素材说明](assets/demo/README.md) |
+| Depth Anything V2 Small HF | Apache-2.0，按[官方模型卡](https://huggingface.co/depth-anything/Depth-Anything-V2-Small-hf)与实际缓存记录使用 |
+| SegFormer B0 ADE | NVIDIA SegFormer 许可，限非商业研究/评估，见[官方模型卡](https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512) |
+| FASHN Human Parser | NVIDIA SegFormer 许可，限非商业研究/评估，见[官方模型卡](https://huggingface.co/fashn-ai/fashn-human-parser) |
+| Wallpaper Engine 模板与素材 | 按引擎来源许可本地使用，软件分发包排除这些资产 |
+
+感谢 Depth Anything、SegFormer、FASHN、Pillow、NumPy、PyTorch、Transformers 与 Wallpaper Engine 提供的模型或工具。详细使用与再分发要求见[模型和素材许可](docs/MODEL_LICENSE.md)。
+
+## 文档
+
+| 文档 | 内容 |
+| --- | --- |
+| [1.0 交付说明](docs/V1.0_RELEASE.md) | 当前能力、验收依据与限制 |
+| [需求审计](docs/V1_REQUIREMENT_AUDIT.md) | 原规格映射与历史证据范围 |
+| [skill 入口](SKILL.md) | 自然语言请求到 CLI 的编排 |
+| [完整工作流](references/workflow.md) | 模式、模型、配置、构图与单位 |
+| [原生排错与验收](references/native-qa.md) | 加载、黑屏、粒子和属性检查 |
+| [开发能力](references/development.md) | 解析、保护及能力分项 |
+| [运动原语](docs/MOTION_PRIMITIVES.md) | 区域 Shader 与约束 |
+| [人物解析](docs/V0.4_IMPLEMENTATION.md) | 发梢、衣料和保护的实现记录 |
+| [蒙版编辑器](docs/V0.5_IMPLEMENTATION.md) | 绘制、保存与再生成 |
+| [高级运行时](docs/V0.6_IMPLEMENTATION.md) | 音频、性能、多屏与 Shader |
+| [自动分析与规划](docs/V1.0_IMPLEMENTATION.md) | 分析器与 Motion Planner |

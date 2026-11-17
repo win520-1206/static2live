@@ -1,0 +1,27 @@
+{
+  "license": "CC0-1.0",
+  "runtime": "Static2Live Web",
+  "depth": "explicit synthetic depth",
+  "regions": "explicit procedural masks",
+  "capture": "Chromium + SwiftShader; 768x512; 60 actual rendered frames",
+  "demos": {
+    "depth": {
+      "frames": 60,
+      "duration_seconds": 5,
+      "mean_frame_difference": 0.3220740424262153,
+      "sha256": "0b5e51bc72062246a8783257d1a45285369d6bd18254f8cbcdefc02fe4d7fc72"
+    },
+    "portrait": {
+      "frames": 60,
+      "duration_seconds": 5,
+      "mean_frame_difference": 0.21353658040364584,
+      "sha256": "16e7e393719b6c6ac6c7005ac466ae946d711ddb9866ff9ed6100e1ada0ce99b"
+    },
+    "particles": {
+      "frames": 60,
+      "duration_seconds": 5,
+      "mean_frame_difference": 1.1454442342122395,
+      "sha256": "9b63a86ad4c92eb30b5143b57f77a3856300208c677847aea5a27962c372d8f2"
+    }
+  }
+}
