@@ -4,7 +4,13 @@
     960,
     540
   ],
-  "capture": "Chromium + SwiftShader; 60 actual rendered frames; 12 FPS; 5 seconds",
+  "gif_dimensions": [
+    768,
+    432
+  ],
+  "capture": "Chromium + SwiftShader; 12 FPS fixed-time samples; duration recorded per demo",
+  "lake_regions": "Manually defined water, distant cloud/mist, and protected foreground/cabin",
+  "lake_preview_pointer": "Centered to demonstrate autonomous water and cloud motion",
   "depth_source": "Depth Anything V2 Small model inference; supplied map for reproduction",
   "depth_model": {
     "model_id": "depth-anything/Depth-Anything-V2-Small-hf",
@@ -26,12 +32,12 @@
   },
   "demos": {
     "depth": {
-      "frames": 60,
-      "duration_seconds": 5,
-      "mean_frame_difference": 8.586673739711934,
-      "sha256": "0984413f7f9efa44c5a336a6f386fe4571fbaf6fef40c048f21c992834b4e0b3",
-      "webp_sha256": "3c6f55b74709858f23cbecadad14fa20fb89ed5a8e3518bd85227863a80e7482",
-      "manifest_sha256": "8b9a5dd5a974f8bb04f69ca8288c3f46a4ba41e226496e36a6ccf52107995bb8"
+      "frames": 96,
+      "duration_seconds": 8,
+      "mean_frame_difference": 0.6969238683127572,
+      "sha256": "deb592278e503ba1de18e624293b2469320bcbc600627eceeeff811b020c56d0",
+      "webp_sha256": "94f52e9b28bc9c92963f8ff1de5124aaf0874454694662238e40e51ad2b9ca60",
+      "manifest_sha256": "5cea8d30b6f3d2f2078a5b2a6a1277cd2acf09c4faf3fd6fe0e35b056aba162f"
     },
     "portrait": {
       "frames": 60,
@@ -49,9 +55,5 @@
       "webp_sha256": "9c9cb5206bcb9e809ea93571040e5710ff75777c894837ca50c13d854db57f3f",
       "manifest_sha256": "6e2ef1147a8658978c3b3b6ec218b0180de2696e1df3e8efaa30ff0432868697"
     }
-  },
-  "gif_dimensions": [
-    768,
-    432
-  ]
+  }
 }

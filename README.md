@@ -10,9 +10,9 @@ Static2Live 在本地分析图片，通过深度、区域蒙版和程序化运�
 
 [快速开始](#快速开始) · [核心功能](#核心功能) · [工作原理](#工作原理) · [文档](#文档)
 
-![Web 深度视差演示](assets/demo/depth-parallax.webp)
+![湖水与远处云雾微动态](assets/demo/depth-parallax.webp)
 
-Web 运行时实际录制。AI 生成的写实湖畔山景经过本地 Depth Anything V2 Small 深度估计，指针左右移动时近远区域产生不同位移。复现使用 Lite 与随素材提供的模型估计深度图。[静态底图](assets/demo/landscape-source.png)
+Web 运行时实际录制。AI 生成的湖畔山景启用局部水面波纹和远处云雾缓动，前景石头及木屋设有保护蒙版。预览指针固定在中央，交互工程仍支持小幅鼠标视差。复现使用 Lite、模型估计深度图及明确绘制的水面/云雾区域。[静态底图](assets/demo/landscape-source.png)
 
 ## 效果展示
 
@@ -28,7 +28,7 @@ Web 运行时实际录制。AI 生成的写实湖畔山景经过本地 Depth Any
 
 AI 生成的写实冬日街景，叠加 Lite 与 Web Canvas 的动态降雪。底图保留静态积雪，空中飘落的雪粒子由运行时绘制。[静态底图](assets/demo/particle-source.png)
 
-三组动图均录制自实际 Web 运行时，统一为 960×540、约 12 FPS、5 秒。首页使用动态 WebP 保留照片色彩，同目录提供 GIF。底图、深度、区域来源和复现步骤见[演示说明](assets/demo/README.md)。
+三组动图均录制自实际 Web 运行时，统一为 960×540、约 12 FPS，湖景 8 秒、人像与雪景各 5 秒。首页使用动态 WebP 保留照片色彩，同目录提供 GIF。底图、深度、区域来源和复现步骤见[演示说明](assets/demo/README.md)。
 
 ## 项目简介
 

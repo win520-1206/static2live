@@ -10,9 +10,9 @@ Static2Live analyzes images locally and builds real-time wallpapers with depth, 
 
 [Quick Start](#quick-start) · [Features](#features) · [Architecture](#architecture) · [Documentation](#documentation)
 
-![Web depth-parallax demonstration](assets/demo/depth-parallax.webp)
+![Lake ripples and distant cloud/mist motion](assets/demo/depth-parallax.webp)
 
-Captured from the actual Web runtime. An AI-generated photorealistic alpine lake is analyzed locally with Depth Anything V2 Small, producing different pointer-driven displacement across near and far regions. Reproduction uses Lite with the supplied model-estimated depth map. [Static source](assets/demo/landscape-source.png)
+Captured from the actual Web runtime. The AI-generated alpine lake has regional water ripples and drifting distant clouds/mist, with protected foreground rocks and boathouse. The preview holds the pointer at the center; the interactive project retains restrained mouse parallax. Reproduction uses Lite, the model-estimated depth map, and explicitly drawn water/cloud regions. [Static source](assets/demo/landscape-source.png)
 
 ## Demos
 
@@ -28,7 +28,7 @@ The user's authorized sample photograph uses model-derived regions corrected by 
 
 An AI-generated photorealistic winter street with dynamic snowfall from Lite and Web Canvas. Snow resting on surfaces is part of the static source; airborne flakes are drawn by the runtime. [Static source](assets/demo/particle-source.png)
 
-All three animations capture the actual Web runtime at 960×540, approximately 12 FPS, for 5 seconds. The README uses animated WebP to preserve photographic color; GIF copies are included in the same directory. Image, depth, and region provenance and reproduction steps are documented in the [demo notes](assets/demo/README.md).
+All three animations capture the actual Web runtime at 960×540 and approximately 12 FPS. The lake runs for 8 seconds; the portrait and snow scenes run for 5 seconds each. The README uses animated WebP to preserve photographic color; GIF copies are included in the same directory. Image, depth, and region provenance and reproduction steps are documented in the [demo notes](assets/demo/README.md).
 
 ## Overview
 
