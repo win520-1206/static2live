@@ -79,6 +79,17 @@ def test_generate_integrity_versions(sources,tmp_path):
     assert validate_output(root)['structural_status']=='failed'
 
 
+@pytest.mark.parametrize('version',['0.1.0','0.2.0','0.3.0','1.0.0rc1','1.0.0','unknown'])
+def test_project_version_compatibility(sources,tmp_path,version):
+    root,_=generate(sources[0],tmp_path/'out',depth_map=sources[1])
+    manifest=read_json(root/'manifest.json')
+    manifest['static2live_version']=version
+    write_json(root/'manifest.json',manifest)
+    report=validate_output(root)
+    integrity=next(check for check in report['checks'] if check['name']=='resources_and_manifest')
+    assert integrity['status']==('failed' if version=='unknown' else 'passed')
+
+
 def test_refs_and_hash(sources,tmp_path):
     root,_=generate(sources[0],tmp_path/'out',depth_map=sources[1])
     manifest=read_json(root/'manifest.json')

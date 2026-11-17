@@ -19,7 +19,7 @@ from .validator import validate_output
 from .regions import load_regions,save_regions
 from .segmentation import ModelSegmentation,semantic_regions
 from .human_parser import ModelHumanParsing,human_regions
-from .sway import build_sway_weight,validate_sway
+from .sway import build_sway_weight,validate_sway,cloth_breath_geometry
 from .analyzer import prepare_assets
 from .framing import frame_record
 
@@ -41,13 +41,16 @@ def generate(input_path, output="output", config_path=None, overrides=None, dept
             validate_sway(params,image.size)
             if kind not in masks or 'protected' not in masks or not np.asarray(masks['protected']).any():
                 raise ValueError('人物摇摆需hair/cloth及非空protected蒙版；启用Smart人物解析或Lite导入，不自动猜测保护区')
-            policy='tip-edge-v2' if kind=='hair' else 'distal-linear-v1'
+            policy='tip-edge-v2' if kind=='hair' else 'cloth-bend-v2'
             masks[kind+'_sway']=build_sway_weight(masks[kind],masks['protected'],params['amplitude_px'],kind,policy)
             if params['amplitude_px'] > 0 and not np.asarray(masks[kind+'_sway']).any():
                 raise ValueError(f'{kind}摇摆没有可运动像素：区域为空或被保护区完全覆盖；请修正蒙版，不输出假动态')
             records[kind+'_sway']={'id':kind+'_sway','source':records[kind]['source'],'confirmed':True,
                                   'derivation':'distal taper + bounded sampling halo - protected guard',
                                   'weight_policy':policy,'parameters':params}
+            if kind == 'cloth':
+                records['cloth_sway'].update(motion_policy='cloth-breath-v2',
+                    breath_geometry=cloth_breath_geometry(masks['cloth']))
     root = Path(tempfile.mkdtemp(prefix=f".{destination.name}-build-", dir=destination.parent)) if overwrite else allocate_version(output, source.stem)
     try:
         (root / "assets").mkdir()

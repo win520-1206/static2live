@@ -36,7 +36,7 @@ def parser():
     planning.add_argument('--auto-plan',dest='auto_plan',action='store_true',default=None,help='按真实区域证据自动推荐Preset与局部运动；默认开启，不自动下载模型')
     planning.add_argument('--no-auto-plan',dest='auto_plan',action='store_false',default=None)
     gen.add_argument('--performance-profile',choices=['inherit','eco','balanced','quality'],help='V0.6 Web运行时帧率/像素/粒子预算；音频及跨屏参数用YAML')
-    gen.add_argument('--human-parsing',action='store_true',default=None,help='V0.4开发中：Smart本地人物解析，需显式准备human-parsing权重')
+    gen.add_argument('--human-parsing',action='store_true',default=None,help='Smart本地人物解析，需显式准备human-parsing权重')
     gen.add_argument('--native-sway',action='store_true',default=None,help='仅原生：对显式确认的 other 区域映射 Foliage Sway，不自动识别发梢')
     gen.add_argument('--sway-amplitude-px',type=float,help='原生手选区域摇摆上界，0–4画布像素')
     toggle=gen.add_mutually_exclusive_group()

@@ -103,7 +103,8 @@ def validate_motion(motion):
         if cloud>min(motion['canvas'].values())*.01: raise ValueError('云层位移超过短边 1%')
         if motion['parallax']['overscan_px']<amplitude+cloud: raise ValueError('边缘留量未包括云层位移')
     if motion.get('sways'):
-        from .sway import validate_sway
+        from .sway import validate_sway,cloth_breath_glsl
+        cloth_breath_glsl(motion)
         if 'protected' not in motion['regions'] or motion['regions']['protected']['coverage']==0:
             raise ValueError('人物摇摆必须有非空保护区')
         kinds=set()

@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import io
+import os
 import numpy as np
 import pytest
 from PIL import Image, ImageDraw
@@ -52,6 +53,69 @@ def test_lite_human_sway_pipeline_no_model(tmp_path, monkeypatch):
     write_json(root/'manifest.json',manifest)
     failed=validate_output(root,write=False)
     assert next(c for c in failed['checks'] if c['name']=='human_sway_protection')['status']=='failed'
+
+
+@pytest.mark.skipif(os.getenv('STATIC2LIVE_BROWSER_TESTS')!='1',reason='browser opt-in')
+def test_cloth_bend_actual_pixels_and_zero(tmp_path):
+    from playwright.sync_api import sync_playwright
+    from test_v02 import browser_launch
+    from test_v06 import read_pixels
+
+    source, regions = inputs(tmp_path)
+    bundle = read_json(regions)
+    bundle['regions'][0]['id'] = 'cloth'
+    write_json(regions, bundle)
+    root, _ = generate(source, tmp_path/'out', regions_path=regions, overrides={
+        'mode':'lite', 'parallax_enabled':False, 'auto_plan':False, 'effects':[],
+        'cloth_sway':{'enabled':True,'amplitude_px':1.5,'period_seconds':6.5},
+    })
+    assert read_json(root/'motion.json')['regions']['cloth_sway']['weight_policy']=='cloth-bend-v2'
+    with sync_playwright() as playwright:
+        browser = browser_launch(playwright)
+        page = browser.new_page(viewport={'width':256,'height':192})
+        page.goto((root/'index.html').as_uri())
+        page.wait_for_function('static2live.status === "ready"')
+
+        def frame(at):
+            page.evaluate('(at) => static2live.setTime(at)', at)
+            page.wait_for_timeout(100)
+            return np.flipud(read_pixels(page))
+
+        first, second = frame(0), frame(3.25)
+        assert not np.array_equal(first[120:155,60:90],second[120:155,60:90])
+        assert np.array_equal(first[60:90,120:140],second[60:90,120:140])
+        assert np.array_equal(first[:10,:10],second[:10,:10])
+        assert np.all(second[:,:,3] == 255)
+        page.evaluate('static2live.setSwayStrength(0)')
+        assert np.array_equal(frame(0),frame(3.25))
+        page.evaluate('static2live.setSwayStrength(1); static2live.setSwayEnabled(false)')
+        assert np.array_equal(frame(0),frame(3.25))
+        browser.close()
+
+
+@pytest.mark.parametrize('audio_enabled',[False,True])
+def test_native_cloth_breath_formula_and_geometry_binding(tmp_path,fixture,audio_enabled):
+    engine,_,_,_=fixture
+    source,regions=inputs(tmp_path)
+    bundle=read_json(regions);bundle['regions'][0]['id']='cloth';write_json(regions,bundle)
+    root,report=generate(source,tmp_path/'out',regions_path=regions,engine_path=engine,overrides={
+        'target':'wallpaper-engine','mode':'lite','parallax_enabled':False,'auto_plan':False,
+        'effects':[],'cloth_sway':{'enabled':True,'amplitude_px':1.5},
+        'audio':{'enabled':audio_enabled,'region':'cloth'},
+    })
+    assert report['structural_status']=='passed'
+    fragments=list((root/'wallpaper-engine/shaders/effects').glob('s2l_*.frag'))
+    assert any('s2lClothBreath(uv)' in path.read_text(encoding='utf8') for path in fragments)
+    assert all('vec2(-1.0), vec2(1.0)' not in path.read_text(encoding='utf8') for path in fragments)
+    motion=read_json(root/'motion.json')
+    assert motion['regions']['cloth_sway']['motion_policy']=='cloth-breath-v2'
+    assert any('vec2(local.x * 0.35, -0.9)' in path.read_text(encoding='utf8') for path in fragments)
+    motion['regions']['cloth_sway']['breath_geometry'][0]+=.01
+    write_json(root/'motion.json',motion)
+    manifest=read_json(root/'manifest.json')
+    manifest['resources']['motion.json']=sha256(root/'motion.json');write_json(root/'manifest.json',manifest)
+    invalid=validate_output(root,write=False)
+    assert next(c for c in invalid['checks'] if c['name']=='human_sway_protection')['status']=='failed'
 
 
 def test_missing_protection_rejected(tmp_path):

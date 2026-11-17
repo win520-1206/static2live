@@ -12,6 +12,7 @@ from .storage import read_json, write_json, sha256, safe_resource
 from .native_runtime import active as runtime_active, runtime_effect, export_resources as export_runtime_resources
 from .native_runtime import properties as runtime_properties, validate_resources as validate_runtime_resources
 from .pointer import has_subject, subject_pointer_guard, RIGID_POLICY, human_fragment, validate_pointer_policy
+from .sway import cloth_native_fragment
 
 class AdapterUnavailable(ValueError):
     pass
@@ -199,7 +200,11 @@ def export_native(root,motion,config,engine_path=None,template_path=None):
         for suffix in ('vert','frag'):
             shader_source=Path(__file__).parent/'native'/f's2l_human.{suffix}'
             target=out/'shaders/effects'/f's2l_human.{suffix}'
-            target.write_text(human_fragment(shader_source.read_text(encoding='utf8'),plan.get('pointer_policy')),encoding='utf8') if suffix=='frag' else shutil.copy2(shader_source,target)
+            if suffix=='frag':
+                fragment=human_fragment(shader_source.read_text(encoding='utf8'),plan.get('pointer_policy'))
+                target.write_text(cloth_native_fragment(fragment,motion),encoding='utf8')
+            else:
+                shutil.copy2(shader_source,target)
         write_json(out/'materials/effects/s2l_human.json',{'passes':[{'shader':'effects/s2l_human',
             'blending':'normal','depthtest':'disabled','depthwrite':'disabled','cullmode':'nocull'}]})
         write_json(out/'effects/s2l_human/effect.json',{'version':1,'name':'Static2Live protected human motion','group':'distort',
@@ -416,6 +421,7 @@ def validate_native(root):
             for suffix in ([] if plan.get('runtime_effect') else ['vert','frag']):
                 original=Path(__file__).parent/'native'/f'{shader}.{suffix}'
                 expected=human_fragment(original.read_text(encoding='utf8'),plan.get('pointer_policy')) if shader=='s2l_human' and suffix=='frag' else original.read_text(encoding='utf8')
+                if shader=='s2l_human' and suffix=='frag':expected=cloth_native_fragment(expected,motion)
                 if (out/'shaders/effects'/f'{shader}.{suffix}').read_text(encoding='utf8')!=expected:
                     raise ValueError('原生 bounded UV Shader 与当前适配器不一致')
     if plan.get('runtime_effect'):
@@ -451,6 +457,7 @@ def validate_native(root):
         for suffix in ('vert','frag'):
             original=Path(__file__).parent/'native'/f's2l_human.{suffix}'
             expected=human_fragment(original.read_text(encoding='utf8'),plan.get('pointer_policy')) if suffix=='frag' else original.read_text(encoding='utf8')
+            if suffix=='frag':expected=cloth_native_fragment(expected,motion)
             if (out/'shaders/effects'/f's2l_human.{suffix}').read_text(encoding='utf8')!=expected:
                 raise ValueError('原生人物Shader与当前适配器不一致')
     if read_json(root/'manifest.json').get('planner') and any(e['exclude_person'] for e in plan['particles']) and 'person' in motion['regions']:

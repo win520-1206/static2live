@@ -29,7 +29,7 @@ def validate_output(root, write=True):
             checks.append({"name": name, "status": "failed", "detail": str(error)})
     def integrity():
         manifest = read_json(root / "manifest.json")
-        if manifest.get("generator") != "static2live" or manifest.get("static2live_version") not in ["0.1.0","0.2.0","0.3.0"]:
+        if manifest.get("generator") != "static2live" or manifest.get("static2live_version") not in ["0.1.0","0.2.0","0.3.0","1.0.0rc1","1.0.0"]:
             raise ValueError("manifest 来源或版本错误")
         required = {"index.html", "runtime.js", "style.css", "motion.json", "config.yaml", "analysis.json", "assets/image.png"}
         motion=read_json(root/'motion.json')
@@ -90,11 +90,15 @@ def validate_output(root, write=True):
     def protection():
         motion=read_json(root/'motion.json')
         if not motion.get('sways'):return 'not applicable: no human sway'
-        from .sway import build_sway_weight
+        from .sway import build_sway_weight,cloth_breath_geometry
         with Image.open(safe_resource(root,motion['regions']['protected']['asset'])) as protected:
             for sway in motion['sways']:
                 with Image.open(safe_resource(root,motion['regions'][sway['kind']]['asset'])) as original, Image.open(safe_resource(root,motion['regions'][sway['weight_region']]['asset'])) as weight:
                     policy=motion['regions'][sway['weight_region']].get('weight_policy','distal-linear-v1')
+                    record=motion['regions'][sway['weight_region']]
+                    if sway['kind']=='cloth' and record.get('motion_policy') is not None:
+                        if record['motion_policy'] not in ('cloth-breath-v1','cloth-breath-v2') or record.get('breath_geometry')!=cloth_breath_geometry(original):
+                            raise ValueError('衣料呼吸几何参数与原区域不对应')
                     expected=build_sway_weight(original,protected,sway['amplitude_px'],sway['kind'],policy)
                     if not np.array_equal(np.asarray(expected),np.asarray(weight)):
                         raise ValueError('sway权重与原区域、保护区及幅度不对应')

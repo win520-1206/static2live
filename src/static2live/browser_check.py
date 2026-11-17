@@ -6,23 +6,63 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from .storage import read_json, write_json, sha256
+from .storage import read_json, write_json, sha256, allocate_version
 from .validator import summary, validate_output
+
+
+def _preserve_native_evidence(report, previous, root, current_hash):
+    """Keep separately observed host evidence only for the same valid project."""
+    if report['structural_status'] == 'failed':
+        return
+    native = next((c for c in previous.get('checks', []) if c.get('name') == 'native_runtime'), {})
+    detail = native.get('detail')
+    if (native.get('status') != 'passed' or not isinstance(detail, dict)
+            or detail.get('manifest_sha256') != current_hash
+            or detail.get('target') != 'native-scene'
+            or read_json(root/'manifest.json').get('adapter', {}).get('actual') != 'native-scene'):
+        return
+    for check in report['checks']:
+        if check['name'] not in ('native_runtime', 'audio_runtime', 'advanced_shader_runtime'):
+            continue
+        old = next((c for c in previous['checks'] if c.get('name') == check['name']), {})
+        capability = {'audio_runtime': 'audio', 'advanced_shader_runtime': 'shader'}.get(check['name'])
+        if (old.get('status') == 'passed' and old.get('detail') == detail
+                and (capability is None or capability in detail.get('observed', []))):
+            check.update(old)
+
+
+def _finish_browser_report(root, result, manifest_hash):
+    # Recheck resources after rendering so a concurrent edit cannot inherit
+    # runtime approval for the version inspected at the start of the check.
+    report = validate_output(root, write=False)
+    current_hash = sha256(root/'manifest.json')
+    # Read the most recent report so an observation added or revoked while
+    # the browser was running is not replaced by the initial snapshot.
+    previous = read_json(root/'validation.json') if (root/'validation.json').exists() else {}
+    if current_hash != manifest_hash or report['structural_status'] == 'failed':
+        result.update(status='failed', detail='浏览器检查期间工程改变或结构验证失败，需对当前版本重新验收')
+    _preserve_native_evidence(report, previous, root, current_hash)
+    for check in report['checks']:
+        if check['name'] == 'browser_runtime':
+            check.update(result)
+    report['status'] = summary(report['checks'])
+    write_json(root/'validation.json', report)
+    return report
 
 
 def check_browser(root):
     root = Path(root).resolve()
-    previous = read_json(root / "validation.json") if (root / "validation.json").exists() else {}
     report = validate_output(root, write=False)
+    manifest_hash = sha256(root/'manifest.json')
     result = {"name":"browser_runtime", "status":"not_tested", "detail":"浏览器尚未运行"}
-    report["checks"][-2] = result
+    if report['structural_status'] == 'failed':
+        result.update(status='failed', detail='结构验证失败，未运行浏览器')
+        return _finish_browser_report(root, result, manifest_hash)
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
         result["detail"] = "安装 dev 可选依赖和 Chromium 后重试"
-        report["status"] = summary(report["checks"])
-        write_json(root / "validation.json", report)
-        return report
+        return _finish_browser_report(root, result, manifest_hash)
     launch_failed = True
     try:
         with sync_playwright() as pw:
@@ -38,6 +78,7 @@ def check_browser(root):
             state = page.evaluate("({status:static2live.status,shader:static2live.shaderCompiled,errors:static2live.errors})")
             if state["status"] != "ready" or not state["shader"]:
                 raise ValueError(f"WebGL 未成功运行: {state}")
+            evidence = allocate_version(root.parent / (root.name + '.acceptance'), 'browser')
             page.evaluate('static2live.setTime?.(0)')
             # Isolate existing depth/effects/sway checks. V0.6 capability checks
             # remain separate not_tested entries, never inferred from these.
@@ -50,9 +91,9 @@ def check_browser(root):
                 page.evaluate("([x,y])=>static2live.setPointer(x,y)",[x,y])
                 page.wait_for_function("([x,y])=>Math.abs(static2live.pointer[0]-x)<0.0001 && Math.abs(static2live.pointer[1]-y)<0.0001",arg=[x,y])
             settle(-1,0); left=pixels()
-            page.screenshot(path=str(root / "browser-left.png"))
+            page.screenshot(path=str(evidence / "browser-left.png"))
             settle(1,0); right=pixels()
-            page.screenshot(path=str(root / "browser-right.png"))
+            page.screenshot(path=str(evidence / "browser-right.png"))
             amplitude = read_json(root / "motion.json")["parallax"]["amplitude_px"]
             difference = float(np.abs(left[:,:,:3].astype(float)-right[:,:,:3]).mean())
             if amplitude > 0 and difference == 0:
@@ -120,11 +161,7 @@ def check_browser(root):
                 page.evaluate('static2live.setSwayEnabled?.(true)')
                 effect_test={'status':'passed','mean_time_difference':change,'disable_stable':True}
             page.evaluate('static2live.setShaderEnabled?.(true);static2live.setAudioEnabled?.(true)')
-            page.screenshot(path=str(root / "browser-preview.png"))
-            manifest = read_json(root / "manifest.json")
-            for name in ("browser-preview.png", "browser-left.png", "browser-right.png"):
-                manifest["resources"][name] = sha256(root / name)
-            write_json(root / "manifest.json", manifest)
+            page.screenshot(path=str(evidence / "browser-preview.png"))
             # Explicitly test failure mode without treating fallback as interactive success.
             fallback = browser.new_page()
             fallback.add_init_script("HTMLCanvasElement.prototype.getContext=function(){return null}")
@@ -137,13 +174,14 @@ def check_browser(root):
             result.update(status="passed",detail={"shader":state,"mean_left_right_difference":difference,
                                                    "corners":corner_checks,"resize":True,"reduced_motion":True,
                                                    "fallback":True,"external_requests":external,'effects':effect_test,'sway':sway_test,
-                                                   "browser":browser.version,"manifest_sha256":sha256(root / "manifest.json")})
+                                                   "browser":browser.version,"manifest_sha256":manifest_hash,
+                                                   "artifacts_directory":str(evidence),
+                                                   "artifacts_sha256":{name:sha256(evidence/name) for name in
+                                                       ('browser-left.png','browser-right.png','browser-preview.png')}})
             browser.close()
     except Exception as error:
         result.update(status="not_tested" if launch_failed else "failed",detail=str(error))
-    report["status"] = summary(report["checks"])
-    write_json(root / "validation.json", report)
-    return report
+    return _finish_browser_report(root, result, manifest_hash)
 
 
 def record_visual(root, note):
@@ -161,21 +199,10 @@ def record_visual(root, note):
     # Rebuild structure and capability inventory. A stale/edited report must
     # not omit new required checks or carry invented passed entries forward.
     report = fresh
-    native = next((c for c in previous.get('checks',[]) if c.get('name')=='native_runtime'),{})
-    native_detail = native.get('detail')
-    native_current = (native.get('status')=='passed' and isinstance(native_detail,dict)
-        and native_detail.get('manifest_sha256')==current_hash
-        and native_detail.get('target')=='native-scene'
-        and read_json(root/'manifest.json').get('adapter',{}).get('actual')=='native-scene')
+    _preserve_native_evidence(report, previous, root, current_hash)
     for check in report["checks"]:
         if check['name']=='browser_runtime':
             check.update(browser)
-        elif native_current and check['name'] in ('native_runtime','audio_runtime','advanced_shader_runtime'):
-            old = next((c for c in previous.get('checks',[]) if c.get('name')==check['name']),{})
-            capability = {'audio_runtime':'audio','advanced_shader_runtime':'shader'}.get(check['name'])
-            if (old.get('status')=='passed' and old.get('detail')==native_detail
-                    and (capability is None or capability in native_detail.get('observed',[]))):
-                check.update(old)
         if check["name"] == "visual_acceptance":
             check.update(status="passed", detail={"note":note,"recorded_unix":time.time(),"method":"recorded visual observation; not an automated guarantee", "manifest_sha256":current_hash})
     report["status"] = summary(report["checks"])

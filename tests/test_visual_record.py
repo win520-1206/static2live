@@ -1,7 +1,7 @@
 """Recorder invariants only; mocked evidence is not actual visual acceptance."""
 import pytest
 
-from static2live.browser_check import record_visual
+from static2live.browser_check import record_visual, _finish_browser_report
 from static2live.pipeline import generate
 from static2live.storage import read_json, write_json, sha256
 from test_v06 import fixture_image
@@ -86,3 +86,35 @@ def test_visual_record_preserves_only_current_scoped_native_evidence(tmp_path,fi
         assert checks[name]['status']==('not_tested' if stale else 'passed')
     assert checks['performance_runtime']['status']=='not_tested'
     assert result['status']=='not_tested'
+
+
+@pytest.mark.parametrize('browser_status,changed,revoked',[
+    ('passed',False,False), ('not_tested',False,False), ('passed',True,False),
+    ('passed',False,True),
+])
+def test_browser_completion_keeps_only_current_native_evidence(tmp_path,fixture,browser_status,changed,revoked):
+    from static2live.wallpaper_engine import record_native
+    engine,_,_,_=fixture
+    source,regions=fixture_image(tmp_path)
+    root,_=generate(source,tmp_path/'out',regions_path=regions,engine_path=engine,overrides={
+        'target':'wallpaper-engine','parallax_enabled':False,
+        'audio':{'enabled':True,'region':'glow'},'shader':{'preset':'warm_glow'},
+    })
+    previous=record_native(root,'Recorder unit fixture only, not actual native QA',
+                           ['load','properties','edges','audio','shader'])
+    original_hash=sha256(root/'manifest.json')
+    if changed:
+        manifest=read_json(root/'manifest.json')
+        manifest['unit_test_edit']='simulated edit during browser check'
+        write_json(root/'manifest.json',manifest)
+    if revoked:
+        next(c for c in previous['checks'] if c['name']=='native_runtime')['status']='warning'
+        write_json(root/'validation.json',previous)
+    # Unit-test completion logic, without claiming a real browser check.
+    result={'name':'browser_runtime','status':browser_status,'detail':'simulated browser outcome'}
+    report=_finish_browser_report(root,result,original_hash)
+    checks={c['name']:c for c in report['checks']}
+    assert checks['browser_runtime']['status']==('failed' if changed else browser_status)
+    for name in ('native_runtime','audio_runtime','advanced_shader_runtime'):
+        assert checks[name]['status']==('not_tested' if changed or revoked else 'passed')
+    assert checks['visual_acceptance']['status']=='not_tested'

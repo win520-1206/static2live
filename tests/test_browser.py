@@ -6,6 +6,9 @@ import numpy as np
 import pytest
 from static2live.pipeline import generate
 from static2live.browser_check import check_browser
+from static2live.storage import read_json, write_json, sha256
+from static2live.wallpaper_engine import record_native
+from test_v03 import fixture  # Mock compiler only, not evidence of actual host QA.
 
 pytestmark=pytest.mark.skipif(os.environ.get('STATIC2LIVE_BROWSER_TESTS')!='1',reason='explicit browser opt-in required')
 
@@ -49,6 +52,45 @@ def test_depth_driven_displacement(tmp_path):
 def test_browser_acceptance(tmp_path,fraction):
     image,depth=fixture_images(tmp_path)
     root,_=generate(image,tmp_path/'out',depth_map=depth,overrides={'parallax':{'fraction':fraction}})
+    before=sha256(root/'manifest.json')
     report=check_browser(root)
     assert next(c for c in report['checks'] if c['name']=='browser_runtime')['status']=='passed',report
+    assert sha256(root/'manifest.json')==before
     assert report['status']=='not_tested' # Do not fabricate human visual approval.
+
+
+def test_browser_evidence_preserves_native_and_legacy_resources(tmp_path,fixture):
+    engine,_,_,_=fixture
+    image,depth=fixture_images(tmp_path)
+    root,_=generate(image,tmp_path/'out',depth_map=depth,engine_path=engine,
+                    overrides={'target':'wallpaper-engine'})
+    # Simulate an old output that already tracked its acceptance screenshots.
+    manifest=read_json(root/'manifest.json')
+    legacy={}
+    for name in ('browser-left.png','browser-right.png','browser-preview.png'):
+        data=(root/'assets/image.png').read_bytes()
+        (root/name).write_bytes(data)
+        manifest['resources'][name]=sha256(root/name)
+        legacy[name]=data
+    write_json(root/'manifest.json',manifest)
+    # Recorder integration fixture, never a claim of real native playback.
+    recorded=record_native(root,'Synthetic recorder fixture only',
+                           ['load','properties','edges','mouse'])
+    native=next(c for c in recorded['checks'] if c['name']=='native_runtime')
+    before=sha256(root/'manifest.json')
+    directories=[]
+    for _ in range(2):
+        report=check_browser(root)
+        checks={c['name']:c for c in report['checks']}
+        assert checks['browser_runtime']['status']=='passed',report
+        assert sha256(root/'manifest.json')==before
+        assert checks['native_runtime']==native
+        assert checks['visual_acceptance']['status']=='not_tested'
+        directory=Path(checks['browser_runtime']['detail']['artifacts_directory'])
+        assert not directory.is_relative_to(root)
+        for name,digest in checks['browser_runtime']['detail']['artifacts_sha256'].items():
+            assert sha256(directory/name)==digest
+        directories.append(directory)
+        for name,data in legacy.items():
+            assert (root/name).read_bytes()==data
+    assert directories[0]!=directories[1]

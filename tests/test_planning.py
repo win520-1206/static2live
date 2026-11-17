@@ -49,8 +49,30 @@ def test_hair_visibility_revision_keeps_legacy_reproducible():
     old=make_plan(image,masks,config,version='1.0')
     new=make_plan(image,masks,config)
     assert old['recommendation']['suggestions']['hair_sway']['amplitude_px']==1.5
-    assert new['version']=='1.1' and new['recommendation']['suggestions']['hair_sway']['amplitude_px']==2.5
+    assert new['version']=='1.2' and new['recommendation']['suggestions']['hair_sway']['amplitude_px']==2.5
     with pytest.raises(ValueError):make_plan(image,masks,config,version='future')
+
+
+def test_cloth_visibility_revision_keeps_legacy_and_explicit_zero(tmp_path):
+    image=Image.new('RGB',(1024,768),(150,110,80))
+    cloth=Image.new('L',image.size)
+    ImageDraw.Draw(cloth).rectangle((100,300,900,760),fill=255)
+    guard=Image.new('L',image.size)
+    ImageDraw.Draw(guard).rectangle((400,280,600,420),fill=255)
+    masks={'cloth':cloth,'protected':guard}
+    config=load_config()
+    for version in ('1.0','1.1'):
+        old=make_plan(image,masks,config,version=version)
+        assert old['recommendation']['suggestions']['cloth_sway']['amplitude_px']==.35
+    current=make_plan(image,masks,config)
+    assert current['version']=='1.2'
+    assert current['recommendation']['suggestions']['cloth_sway']['amplitude_px']==1.5
+    source=tmp_path/'cloth.png';image.save(source)
+    regions=tmp_path/'regions.json';bundle(source,regions,('cloth','protected'))
+    explicit=prepare_assets(source,regions_path=regions,overrides={
+        'parallax_enabled':False,'cloth_sway':{'enabled':False,'amplitude_px':0}})
+    assert explicit.config['cloth_sway']['enabled'] is False
+    assert explicit.config['cloth_sway']['amplitude_px']==0
 
 
 def test_known_person_auto_guard_and_priority(source,tmp_path):
@@ -63,7 +85,7 @@ def test_known_person_auto_guard_and_priority(source,tmp_path):
     assert np.all(np.asarray(analyzed.masks['protected'])[np.asarray(analyzed.masks['person'])>0]==255)
     root,report=generate(source,tmp_path/'out',regions_path=regions,overrides={'parallax_enabled':False})
     assert report['structural_status']=='passed' and report['status']=='not_tested'
-    assert sha256(source)==before and read_json(root/'manifest.json')['planner']['version']=='1.1'
+    assert sha256(source)==before and read_json(root/'manifest.json')['planner']['version']=='1.2'
     overridden=prepare_assets(source,regions_path=regions,overrides={'parallax_enabled':False,'preset':'snow_soft','effects':[]})
     assert overridden.config['preset']=='snow_soft' and overridden.config['effects']==[] and overridden.planning['explicit_preset']
     disabled=prepare_assets(source,regions_path=regions,overrides={'parallax_enabled':False,'auto_plan':False})

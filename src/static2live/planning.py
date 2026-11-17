@@ -8,8 +8,8 @@ import numpy as np
 from PIL import Image,ImageChops,ImageDraw,ImageFilter,ImageOps
 from .sway import build_sway_weight
 
-VERSION='1.1'
-SUPPORTED_VERSIONS=('1.0',VERSION)
+VERSION='1.2'
+SUPPORTED_VERSIONS=('1.0','1.1',VERSION)
 
 
 def plans_equal(actual,expected):
@@ -74,9 +74,16 @@ def recommend(features,masks,version=VERSION):
         preset='general_balanced';reasons.append('no reliable scene identity available; generic bounded depth response')
         deferred.append('Semantic understanding requires Smart or explicitly drawn/imported regions; brightness is not recognition')
     protected=masks.get('protected');short=min(features['canvas'].values())
-    for kind,amplitude,period,phase in [('hair',min(1.5 if version=='1.0' else 2.5,short*.005),5.5,.3),('cloth',min(.35,short*.002),6.5,1.3)]:
+    # Older manifests retain their subpixel cloth recommendation. New plans
+    # allow a small visible bend in ordinary scaled previews.
+    cloth_amplitude=.35 if version in ('1.0','1.1') else 1.5
+    for kind,amplitude,period,phase in [
+        ('hair',min(1.5 if version=='1.0' else 2.5,short*.005),5.5,.3),
+        ('cloth',min(cloth_amplitude,short*.002),6.5,1.3),
+    ]:
         if kind in masks and protected is not None and np.asarray(protected).any():
-            weight=build_sway_weight(masks[kind],protected,amplitude,kind)
+            weight_policy='cloth-bend-v2' if kind=='cloth' and version=='1.2' else 'distal-linear-v1'
+            weight=build_sway_weight(masks[kind],protected,amplitude,kind,weight_policy)
             if np.asarray(weight).any():
                 suggestions[kind+'_sway']={'enabled':True,'amplitude_px':amplitude,'period_seconds':period,'phase':phase}
                 reasons.append(kind+' source plus protection admits bounded distal motion')

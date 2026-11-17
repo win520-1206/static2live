@@ -6,6 +6,7 @@ from PIL import Image
 from .storage import read_json, write_json, sha256
 from .primitives import GEOMETRIC, SHADER_MODES, native_fragment
 from .pointer import has_subject, subject_pointer_guard, RIGID_POLICY, validate_pointer_policy
+from .sway import cloth_native_fragment
 
 
 def active(runtime):
@@ -17,7 +18,7 @@ def program_name(runtime,subject=False):
     return ('s2l_primitives' if runtime['shader']['preset'] in GEOMETRIC else 's2l_runtime')+('_subject' if subject else '')
 
 
-def fragment_source(base,runtime,subject=False):
+def fragment_source(base,runtime,subject=False,motion=None):
     validate_pointer_policy(subject,legacy_bool=True)
     result=native_fragment(base) if runtime['shader']['preset'] in GEOMETRIC else base
     if subject and result.count('vec2 offset = pointer*')!=1:
@@ -28,7 +29,7 @@ def fragment_source(base,runtime,subject=False):
     elif subject:
         result=result.replace('vec2 offset = pointer*',
             'depthWeight*=1.0-texSample2D(g_Texture1,uv).g;\n    vec2 offset = pointer*')
-    return result
+    return cloth_native_fragment(result,motion)
 
 
 def strength_script(key,toggle,base):
@@ -81,7 +82,7 @@ def export_resources(root,out,motion,texture):
     for suffix in ('vert','frag'):
         original=Path(__file__).parent/'native'/f's2l_runtime.{suffix}'
         target=out/'shaders/effects'/f'{name}.{suffix}'
-        if suffix=='frag':target.write_text(fragment_source(original.read_text(encoding='utf8'),runtime,RIGID_POLICY if has_subject(motion) else False),encoding='utf8')
+        if suffix=='frag':target.write_text(fragment_source(original.read_text(encoding='utf8'),runtime,RIGID_POLICY if has_subject(motion) else False,motion),encoding='utf8')
         else:shutil.copy2(original,target)
     write_json(out/f'materials/effects/{name}.json',{'passes':[{'shader':f'effects/{name}','blending':'normal',
         'depthtest':'disabled','depthwrite':'disabled','cullmode':'nocull'}]})
@@ -130,7 +131,7 @@ def validate_resources(root,out,motion,scene,props):
     for suffix in ('vert','frag'):
         original=Path(__file__).parent/'native'/f's2l_runtime.{suffix}'
         target=out/'shaders/effects'/f'{program}.{suffix}'
-        matches=(target.read_text(encoding='utf8')==fragment_source(original.read_text(encoding='utf8'),runtime,subject)) if suffix=='frag' else sha256(target)==sha256(original)
+        matches=(target.read_text(encoding='utf8')==fragment_source(original.read_text(encoding='utf8'),runtime,subject,motion)) if suffix=='frag' else sha256(target)==sha256(original)
         if not matches:
             raise ValueError('原生V0.6 Shader与适配器不一致')
     for key,value in properties(runtime).items():

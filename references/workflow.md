@@ -1,6 +1,6 @@
 ## 从请求到参数
 
-已实现V1.0自动规划开发接口，包尚未完成V1.0发布验收；先读[自动分析与规划](../docs/V1.0_IMPLEMENTATION.md)。`static2live IMAGE`默认auto_plan；它在当前Lite/Smart模式内分析，不静默换模式或下载模型。`static2live analyze --input IMAGE --no-parallax`可只做无模型分析，不创建壁纸；没有语义证据时只给通用推荐。需要真实自动区域用Smart，细人物用已准备且授权的human-parsing；用户明确选择Lite时不擅自启用模型。
+当前1.0.0提供自动分析与规划，先读[1.0范围](../docs/V1.0_RELEASE.md)。`static2live IMAGE`默认auto_plan，在所选Lite/Smart模式内分析。`static2live analyze --input IMAGE --no-parallax`只做无模型分析；没有语义证据时只给通用推荐。真实自动区域选择Smart，人物细分类使用已准备且授权的human-parsing。用户选择Lite时沿用Lite，模型准备通过显式命令进行。
 
 把自然语言意图映射到已有配置，解释实际能做的部分；不承诺通用语言解析器或读心。例如：
 
@@ -61,3 +61,7 @@ static2live models prepare --kind segmentation --model-cache MODEL_DIR --accept-
 5. 观察通过后才 `static2live record-visual VERSION --note "实际观察"`。重新 validate 或改资源须重验；warning / failed / not_tested 如实报告，返回码不等于完整视觉验收。
 
 视觉录入只证明已实际观察的Web画面，不证明宿主音频、性能或多屏。`record-visual`会重新生成当前结构/能力检查清单，要求同一Manifest的浏览器通过证据；旧报告缺项、未知检查或过期证据不能沿用。已有原生验收仅在Manifest相同、native-scene目标和对应观察分项一致时保留。录入后仍须读取整体状态，不因visual_acceptance单项passed就报告完整验收成功；不要手改validation.json凑齐通过。
+
+浏览器验收截图单独存到版本目录旁的 `vNNN.acceptance/browser/v001/` 等独立目录，路径和截图哈希记入browser_runtime.detail。每次重验创建新证据目录，保持工程Manifest及已有受管截图文件。检查前后重新核对结构与Manifest，工程变化时要求重验。同一有效Manifest绑定的原生观察按实际分项保留，浏览器启动失败不会自行撤销有效原生证据，检查期间被撤销的原生通过也不会从旧快照恢复。浏览器检查仍不自动记录人工视觉通过。
+
+工具拒绝某项操作时，核对拒绝的具体动作、原因及当前授权，向用户说明仍受影响的步骤。页面访问与CLI执行的限制范围需分别确认，保留已授权且可执行的工作。明确拒绝覆盖的同一行为不能通过更换协议或工具继续执行。

@@ -8,6 +8,7 @@ from .motion import validate_motion
 from .storage import safe_resource
 from .primitives import GLSL, SHADER_MODES
 from .pointer import has_subject, subject_pointer_guard
+from .sway import cloth_web_runtime
 
 
 def export_web(root, motion):
@@ -39,6 +40,7 @@ def export_web(root, motion):
     for name in ("runtime.js", "style.css",'effects.js','audio.js'):
         content=template.joinpath(name).read_text(encoding="utf-8")
         if name=='runtime.js':
+            content=cloth_web_runtime(content,motion)
             content=content.replace('/*S2L_PRIMITIVE_GLSL*/',GLSL).replace('/*S2L_SHADER_MODES*/',json.dumps(SHADER_MODES))
         (root / name).write_text(content, encoding="utf-8")
     (root / "index.html").write_text(
