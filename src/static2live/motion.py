@@ -49,14 +49,18 @@ def create_motion(size, config, regions=None, depth_present=True):
     regions=regions or {}
     for effect in effects:
         region=effect['region']
+        if effect['type']=='foliage_sway' and effect['enabled'] and effect['intensity']>0 and effect['amplitude_px']>0:
+            if region not in regions or regions[region]['coverage']==0:
+                raise ValueError('植物摆动需要非空other植物权重区域')
         if region!='full' and (region not in regions or regions[region]['coverage']==0): effect['enabled']=False
     cloud=next((e['amplitude_px']*e['intensity'] for e in effects if e['type']=='cloud_drift' and e['enabled']),0)
+    foliage=next((e['amplitude_px']*e['intensity'] for e in effects if e['type']=='foliage_sway' and e['enabled']),0)
     result = {"version": "0.2", "canvas": {"width": size[0], "height": size[1]},
             'mode':config.get('mode','lite'),'seed':config.get('seed',1337),'regions':regions,'effects':effects,'parallax_enabled':enabled,
             "assets": {"image": "assets/image.png", "depth": "assets/depth.png" if depth_present else None},
             "depth": {"near_white": True, "range": [0, 1]},
             "parallax": {"amplitude_px": amplitude, "response_seconds": config["parallax"]["response_seconds"],
-                         "overscan_px": amplitude + cloud + 2 if amplitude+cloud else 0}}
+                         "overscan_px": amplitude + cloud + foliage + 2 if amplitude+cloud+foliage else 0}}
     sways=[]
     for kind in ('hair','cloth'):
         params=config.get(kind+'_sway',{})
@@ -100,8 +104,10 @@ def validate_motion(motion):
             if effect['enabled'] and effect['region']!='full' and effect['region'] not in motion['regions']:
                 raise ValueError('启用效果引用缺失区域')
         cloud=next((e['amplitude_px']*e['intensity'] for e in motion['effects'] if e['type']=='cloud_drift' and e['enabled']),0)
+        foliage=next((e['amplitude_px']*e['intensity'] for e in motion['effects'] if e['type']=='foliage_sway' and e['enabled']),0)
         if cloud>min(motion['canvas'].values())*.01: raise ValueError('云层位移超过短边 1%')
-        if motion['parallax']['overscan_px']<amplitude+cloud: raise ValueError('边缘留量未包括云层位移')
+        if foliage>min(motion['canvas'].values())*.01: raise ValueError('植物摆动超过短边1%')
+        if motion['parallax']['overscan_px']<amplitude+cloud+foliage: raise ValueError('边缘留量未包括云层或植物位移')
     if motion.get('sways'):
         from .sway import validate_sway,cloth_breath_glsl
         cloth_breath_glsl(motion)
@@ -118,12 +124,12 @@ def validate_motion(motion):
             region=motion['regions'].get(sway['weight_region'])
             if not region or region['coverage']==0: raise ValueError('sway权重不存在或为空')
             validate_sway({k:v for k,v in sway.items() if k not in ('kind','weight_region')},tuple(motion['canvas'].values()))
-        if motion['parallax']['overscan_px']<amplitude+cloud+sum(s['amplitude_px'] for s in motion['sways']):
+        if motion['parallax']['overscan_px']<amplitude+cloud+foliage+sum(s['amplitude_px'] for s in motion['sways']):
             raise ValueError('边缘留量未包含人物摇摆')
     if motion['version']=='0.6':
         from .runtime_options import validate_runtime
         validate_runtime(motion['runtime'],motion['regions'],tuple(motion['canvas'].values()))
         shader=motion['runtime']['shader']
         extra=shader['amplitude_px']*shader['strength'] if shader['preset'] in DISPLACING else 0
-        if motion['parallax']['overscan_px']<amplitude+cloud+sum(s['amplitude_px'] for s in motion['sways'])+extra:
+        if motion['parallax']['overscan_px']<amplitude+cloud+foliage+sum(s['amplitude_px'] for s in motion['sways'])+extra:
             raise ValueError('边缘留量未包括高级Shader位移')

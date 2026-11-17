@@ -6,13 +6,13 @@
 
 Static2Live analyzes images locally and builds real-time wallpapers with depth, region masks, and procedural motion. Export offline Web wallpapers or optional native Wallpaper Engine scenes.
 
-`v1.0.0` · Python 3.10+ · MIT-licensed code
+`v1.0.1` · Python 3.10+ · MIT-licensed code
 
 [Quick Start](#quick-start) · [Features](#features) · [Architecture](#architecture) · [Documentation](#documentation)
 
 ![Lake ripples and distant cloud/mist motion](assets/demo/depth-parallax.webp)
 
-Captured from the actual Web runtime. The AI-generated alpine lake has regional water ripples and drifting distant clouds/mist, with protected foreground rocks and boathouse. The preview holds the pointer at the center; the interactive project retains restrained mouse parallax. Reproduction uses Lite, the model-estimated depth map, and explicitly drawn water/cloud regions. [Static source](assets/demo/landscape-source.png)
+Captured from the actual Web runtime. Vegetation sway, water ripples, and cloud/mist motion use independent region weights, with protected rocks and boathouse. The preview holds the pointer at the center; the interactive project retains restrained mouse parallax. Reproduction uses Lite, the model-estimated depth map, and explicit region masks. [Static source](assets/demo/landscape-source.png)
 
 ## Demos
 
@@ -20,7 +20,7 @@ Captured from the actual Web runtime. The AI-generated alpine lake has regional 
 
 ![Real-portrait hair and clothing micro-motion](assets/demo/portrait-motion.webp)
 
-The user's authorized sample photograph uses model-derived regions corrected by the user to demonstrate hair/clothing micro-motion and warm dust in Web. Protected facial regions remain stable, and the pointer stays centered during capture. Reproduction imports those regions into Lite. [Reduced display source](assets/demo/portrait-source.png)
+The user's authorized sample photograph uses model-derived regions corrected by the user to demonstrate hair/clothing micro-motion and more visible soft-edged warm dust in Web. Particle appearance follows the previously accepted native presentation, with protected facial regions. Reproduction imports those regions into Lite. [Reduced display source](assets/demo/portrait-source.png)
 
 ### Environmental particles
 
@@ -44,7 +44,7 @@ The Python package and CLI perform analysis and generation. A thin skill maps na
 | Lite | Manual regions, rule-based candidates, optional supplied depth | Implemented, fully model-free with parallax disabled |
 | Smart | Local person/sky/water prediction and optional human parsing | Implemented, predictions require inspection and possible correction |
 | Hair and clothing | Anchored roots, local weights, and protected regions | Implemented, corresponding photo feedback recorded |
-| Particles and regional effects | Rain, snow, dust, fog, Glow, and Cloud Drift | Implemented on Web, native scope documented below |
+| Particles and regional effects | Rain/snow/dust/fog, Glow, Cloud Drift, independent foliage sway | Implemented on Web, native scope documented below |
 | Offline region editor | Paint, erase, protection, motion sources, undo, and zoom | Implemented, regenerate after editing |
 | Automatic planning | Evidence-based Preset and restrained motion recommendations | Implemented, explicit user configuration takes precedence |
 | Advanced runtime | Optional audio response, performance profiles, virtual viewport, local shaders | Implemented, acceptance and host support tracked separately |
@@ -166,7 +166,7 @@ Native exports add `native-plan.json` and `wallpaper-engine/project.json`. Missi
 
 States are `passed / warning / failed / not_tested`. Generation, browser behavior, and human observation are tracked separately. Every new Manifest retains its own acceptance state. Screenshot evidence is independently versioned.
 
-The local 1.0 installed-package regression on 2026-11-17 passed **220 tests**, including enabled synthetic browser tests. The final source-package core/skill workflow passed a further 28 tests. Real-photo, independent native audio, and physical dual-display evidence is scoped in the [1.0 notes](docs/V1.0_RELEASE.md) and [requirements audit](docs/V1_REQUIREMENT_AUDIT.md). Private source photos and raw local records remain on the maintainer's machine.
+The installed 1.0.1 regression on 2026-11-17 passed **225 tests**, including real synthetic browser tests and foliage/water composition and soft-dust cases. The historical 1.0 source package also passed 28 core/skill workflow tests. Current fixes are described in the [1.0.1 notes](docs/V1.0.1.md). Real-photo, independent native audio, and physical dual-display evidence is scoped in the [1.0 notes](docs/V1.0_RELEASE.md) and [requirements audit](docs/V1_REQUIREMENT_AUDIT.md). Private source photos and raw local records remain on the maintainer's machine.
 
 ## Status and limitations
 
@@ -226,6 +226,7 @@ Thanks to Depth Anything, SegFormer, FASHN, Pillow, NumPy, PyTorch, Transformers
 | Document | Contents |
 | --- | --- |
 | [1.0 delivery notes](docs/V1.0_RELEASE.md) | Current capabilities, acceptance basis, and limitations |
+| [1.0.1 fixes](docs/V1.0.1.md) | Independent foliage sway, soft warm dust, and compatibility |
 | [Requirements audit](docs/V1_REQUIREMENT_AUDIT.md) | Original specification mapping and historical scope |
 | [Skill entry point](SKILL.md) | Natural-language request to CLI orchestration |
 | [Full workflow](references/workflow.md) | Modes, models, configuration, framing, and units |

@@ -11,6 +11,28 @@ from .pointer import has_subject, subject_pointer_guard
 from .sway import cloth_web_runtime
 
 
+def foliage_texture(root, motion):
+    """Pack shader/foliage masks into one sampler to stay within WebGL's eight slots."""
+    foliage = next((effect for effect in motion.get('effects', [])
+                    if effect['type'] == 'foliage_sway' and effect['enabled'] and effect['intensity'] > 0), None)
+    if foliage is None:
+        return None
+    size = (motion['canvas']['width'], motion['canvas']['height'])
+    red = Image.new('L', size, 0)
+    shader_region = motion.get('runtime', {}).get('shader', {}).get('region')
+    if shader_region:
+        with Image.open(safe_resource(root, motion['regions'][shader_region]['asset'])) as mask:
+            red = mask.convert('L')
+    with Image.open(safe_resource(root, motion['regions'][foliage['region']]['asset'])) as mask:
+        green = mask.convert('L')
+    exclusions = ['protected'] + (['person'] if foliage['exclude_person'] else [])
+    for key in exclusions:
+        if key in motion['regions']:
+            with Image.open(safe_resource(root, motion['regions'][key]['asset'])) as mask:
+                green = ImageChops.subtract(green, mask.convert('L'))
+    return Image.merge('RGBA', (red, green, Image.new('L', size, 0), Image.new('L', size, 255)))
+
+
 def export_web(root, motion):
     validate_motion(motion)
     def uri(relative):
@@ -35,6 +57,11 @@ def export_web(root, motion):
         with Image.open(safe_resource(root,motion['regions']['cloud']['asset'])) as c, Image.open(safe_resource(root,motion['regions']['person']['asset'])) as p:
             output=io.BytesIO();ImageChops.subtract(c,p).save(output,format='PNG')
             boot['cloud_texture']='data:image/png;base64,'+base64.b64encode(output.getvalue()).decode('ascii')
+    packed = foliage_texture(root, motion)
+    if packed is not None:
+        output = io.BytesIO()
+        packed.save(output, format='PNG')
+        boot['effect_texture'] = 'data:image/png;base64,' + base64.b64encode(output.getvalue()).decode('ascii')
     serialized = json.dumps(boot, ensure_ascii=True).replace("<", "\\u003c")
     template = files("static2live").joinpath("web")
     for name in ("runtime.js", "style.css",'effects.js','audio.js'):

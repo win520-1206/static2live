@@ -71,15 +71,16 @@ def main():
         depth_map=assets / 'depth-map.png', regions_path=assets / 'landscape-regions.json',
         overrides={**common, 'parallax_enabled': True, 'parallax': {'fraction': .002},
             'shader': {'preset': 'water_ripple', 'strength': .9, 'amplitude_px': 4, 'period_seconds': 4},
-            'effects': [{'type': 'cloud_drift', 'intensity': .9, 'amplitude_px': 8, 'period_seconds': 8}]})
+            'effects': [{'type': 'cloud_drift', 'intensity': .9, 'amplitude_px': 8, 'period_seconds': 8},
+                        {'type': 'foliage_sway', 'intensity': .9, 'amplitude_px': 4, 'period_seconds': 8/3}]})
     # Match the accepted 2048x1152 portrait amplitudes at the public preview size.
     with Image.open(assets / 'portrait-source.png') as image:
         scale = image.width / 2048
     portrait_options = {**common,
         'hair_sway': {'enabled': True, 'amplitude_px': 2.5 * scale, 'period_seconds': 5.5, 'phase': .3},
         'cloth_sway': {'enabled': True, 'amplitude_px': 3 * scale, 'period_seconds': 6.5, 'phase': 1.3},
-        'effects': [{'type': 'dust', 'count': 72, 'intensity': .35,
-                     'speed_px_s': 9 * scale, 'size_px': 2 * scale, 'exclude_person': True}]}
+        'effects': [{'type': 'dust', 'count': 90, 'intensity': .8, 'softness': .8,
+                     'speed_px_s': 9 * scale, 'size_px': 8 * scale, 'exclude_person': True}]}
     projects['portrait'], _ = generate(assets / 'portrait-source.png', work / 'portrait',
         regions_path=assets / 'portrait-regions.json', overrides=portrait_options)
     projects['particles'], _ = generate(assets / 'particle-source.png', work / 'particles',

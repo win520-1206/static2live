@@ -29,7 +29,7 @@ def validate_output(root, write=True):
             checks.append({"name": name, "status": "failed", "detail": str(error)})
     def integrity():
         manifest = read_json(root / "manifest.json")
-        if manifest.get("generator") != "static2live" or manifest.get("static2live_version") not in ["0.1.0","0.2.0","0.3.0","1.0.0rc1","1.0.0"]:
+        if manifest.get("generator") != "static2live" or manifest.get("static2live_version") not in ["0.1.0","0.2.0","0.3.0","1.0.0rc1","1.0.0","1.0.1"]:
             raise ValueError("manifest 来源或版本错误")
         required = {"index.html", "runtime.js", "style.css", "motion.json", "config.yaml", "analysis.json", "assets/image.png"}
         motion=read_json(root/'motion.json')
@@ -145,6 +145,15 @@ def validate_output(root, write=True):
         motion = read_json(root / "motion.json")
         if boot.get("motion") != motion:
             raise ValueError("内嵌 Motion 与 motion.json 不一致，需重新导出")
+        from .renderer import foliage_texture
+        expected_effect_texture = foliage_texture(root, motion)
+        if expected_effect_texture is not None:
+            raw = base64.b64decode(boot['effect_texture'].split(',', 1)[1], validate=True)
+            with Image.open(io.BytesIO(raw)) as packed:
+                if packed.mode != 'RGBA' or packed.size != expected_effect_texture.size or packed.tobytes() != expected_effect_texture.tobytes():
+                    raise ValueError('植物/区域Shader组合纹理未绑定源蒙版')
+        elif 'effect_texture' in boot:
+            raise ValueError('未启用植物摆动却包含额外组合纹理')
         if 'pointer_policy' in boot or 'pointer_depth' in boot:
             from .pointer import has_subject, subject_pointer_guard
             if boot.get('pointer_policy') not in ('subject-anchored-v1','subject-rigid-v2') or not has_subject(motion):

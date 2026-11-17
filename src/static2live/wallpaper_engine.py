@@ -125,6 +125,8 @@ def plan_native(motion,config):
         if r['display']['viewport']!=[0,0,1,1]: unsupported.append('display viewport: Web spanning crop only; configure native monitor layout in engine')
     for e in motion.get('effects',[]):
         if not e['enabled'] or e['intensity']==0 or e['count']==0 and e['type'] in ['rain','snow','dust','fog']: continue
+        if 'softness' in e:
+            unsupported.append('dust softness: Web setting; native uses its radial sprite material')
         if e['type'] not in ['rain','snow','dust','fog'] or e['region']!='full':
             unsupported.append(e['type']+': native V0.3 supports full-canvas particles only; use retained Web version')
         else: effects.append(deepcopy(e))

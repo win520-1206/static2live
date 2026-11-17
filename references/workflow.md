@@ -1,6 +1,6 @@
 ## 从请求到参数
 
-当前1.0.0提供自动分析与规划，先读[1.0范围](../docs/V1.0_RELEASE.md)。`static2live IMAGE`默认auto_plan，在所选Lite/Smart模式内分析。`static2live analyze --input IMAGE --no-parallax`只做无模型分析；没有语义证据时只给通用推荐。真实自动区域选择Smart，人物细分类使用已准备且授权的human-parsing。用户选择Lite时沿用Lite，模型准备通过显式命令进行。
+当前1.0.1提供自动分析与规划，先读[1.0范围](../docs/V1.0_RELEASE.md)及[植物/暖尘修正](../docs/V1.0.1.md)。`static2live IMAGE`默认auto_plan，在所选Lite/Smart模式内分析。`static2live analyze --input IMAGE --no-parallax`只做无模型分析；没有语义证据时只给通用推荐。真实自动区域选择Smart，人物细分类使用已准备且授权的human-parsing。用户选择Lite时沿用Lite，模型准备通过显式命令进行。
 
 把自然语言意图映射到已有配置，解释实际能做的部分；不承诺通用语言解析器或读心。例如：
 
@@ -12,6 +12,8 @@
 | 雨 / 雪 / 水面微波 | rainy_city / snow_soft；water_ripple必须已有water区域。不按颜色猜天气或把天空等同云层 |
 | 动漫氛围 / 雪林 / 霓虹 | anime_chill / snow_forest / cyberpunk只是运动与灯光风格，不重画人物。cyberpunk的neon_pulse需非空glow；雪林不冒称自动识别树或自动光线追踪 |
 | 鼠标跟随轻一点 | --strength为短边比例，上限.01；用户要求像素时先除以画布短边，不能当作0–100强度 |
+| 花草轻摆、石头固定 | Web可用foliage_sway与明确other植物权重，根部降低权重，石头设protected；可与water_ripple并行，原生范围读native-plan |
+| 暖尘更明显、更柔和 | 调整dust的intensity、size_px与count，可显式设置Web softness；先检查人物排除和亮背景上的实际可见度，原生有自身尺寸/透明度换算 |
 | 跟随音乐 | 仅显式请求时audio.enabled；先说明输入来源。默认无音频，不请求麦克风、不自动播放测试声 |
 | 局部轻浮动、平移、缩放、旋转或波动 | 读取[运动原语](../docs/MOTION_PRIMITIVES.md)，用shader.preset选择float/pan/zoom/rotate/wave/distortion；须有明确other蒙版，不擅自作用整图或人脸 |
 | 无交互视频、眨眼或说话 | 当前不支持，不用静态画面或变脸效果代替，也不另写视频渲染器 |

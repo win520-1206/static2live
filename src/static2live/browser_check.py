@@ -145,7 +145,7 @@ def check_browser(root):
                 sway_test={'status':'passed','mean_time_difference':change,'zero_stable':True,'off_stable':True,'protected_pixels_unchanged':int(protected.sum())}
             effect_test={'status':'not_applicable','detail':'没有启用非零效果'}
             effect_motion=read_json(root/'motion.json')
-            active=any(e['enabled'] and e['intensity']>0 and (e['count']>0 or e['type'] in ['glow','cloud_drift']) for e in effect_motion.get('effects',[]))
+            active=any(e['enabled'] and e['intensity']>0 and (e['count']>0 or e['type'] in ['glow','cloud_drift','foliage_sway']) for e in effect_motion.get('effects',[]))
             if active:
                 page.evaluate('static2live.setSwayEnabled?.(false)')
                 page.evaluate('static2live.setParallaxEnabled(false);static2live.pointer=[0,0]')

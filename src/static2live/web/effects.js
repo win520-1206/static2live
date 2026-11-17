@@ -4,7 +4,7 @@ window.Static2LiveEffects=class {
     this.boot=boot;this.state=state;this.base=base;this.canvas=document.querySelector('#effects');
     this.ctx=this.canvas.getContext('2d');this.layer=document.createElement('canvas');this.lc=this.layer.getContext('2d');
     this.combined=document.createElement('canvas');this.cc=this.combined.getContext('2d',{willReadFrequently:true});
-    this.effects=(boot.motion.effects||[]).filter(e=>e.enabled && e.intensity>0 && e.type!=='cloud_drift');
+    this.effects=(boot.motion.effects||[]).filter(e=>e.enabled && e.intensity>0 && !['cloud_drift','foliage_sway'].includes(e.type));
     this.active=this.effects.length>0;this.images={};this.masks={};this.clipCache={};
     let seed=boot.motion.seed??1;
     const random=()=>{seed=(Math.imul(1664525,seed)+1013904223)>>>0;return seed/4294967296;};
@@ -64,6 +64,10 @@ window.Static2LiveEffects=class {
           else if(e.type==='fog'){
             const r=Math.max(vw,vh)*(.12+.1*p.s);const gradient=c.createRadialGradient(x,y,0,x,y,r);
             gradient.addColorStop(0,e.color);gradient.addColorStop(1,e.color+'00');c.fillStyle=gradient;c.fillRect(x-r,y-r,2*r,2*r);
+          }else if(e.type==='dust' && e.softness>0){
+            const gradient=c.createRadialGradient(x,y,0,x,y,s);
+            gradient.addColorStop(0,e.color);gradient.addColorStop(1-e.softness,e.color);
+            gradient.addColorStop(1,e.color+'00');c.fillStyle=gradient;c.fillRect(x-s,y-s,2*s,2*s);
           }else{c.beginPath();c.arc(x,y,s,0,2*Math.PI);c.fill();}
         });
       }

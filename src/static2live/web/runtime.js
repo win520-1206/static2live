@@ -8,6 +8,7 @@
   const state = window.static2live = {status:'loading', shaderCompiled:false, frames:0,
     pointer:[0,0], target:[0,0], reducedMotion:false, errors:[], motion:m, networkRequests:0,time:0};
   const cloud=(m.effects||[]).find(e=>e.type==='cloud_drift' && e.enabled);
+  const foliage=(m.effects||[]).find(e=>e.type==='foliage_sway' && e.enabled && e.intensity>0);
   const sways=m.sways||[];
   const options=m.runtime;
   const budget=options?.performance||{fps:60,pixel_ratio:2,max_pixels:16777216,particle_fraction:1};
@@ -30,7 +31,7 @@
   const fs = `precision highp float;
     varying vec2 uv; uniform sampler2D imageTex; uniform sampler2D depthTex; uniform sampler2D cloudTex;
     uniform sampler2D hairTex; uniform sampler2D clothTex; uniform sampler2D protectedTex;
-    uniform vec3 hairParams; uniform vec3 clothParams; uniform float swayTime;
+    uniform vec3 hairParams; uniform vec3 clothParams; uniform vec3 foliageParams; uniform float swayTime;
     uniform vec2 mouse; uniform vec2 imageSize; uniform vec2 viewport;
     uniform float amplitude; uniform float overscan; uniform float cloudAmplitude; uniform float cloudPhase;
     uniform vec4 displayRect; uniform vec4 advancedParams; uniform sampler2D advancedTex; uniform sampler2D audioTex;
@@ -54,6 +55,9 @@
       float h=hairParams.x*texture2D(hairTex,base).r*sin(swayTime*hairParams.y+hairParams.z+localPhase);
       float c=clothParams.x*texture2D(clothTex,base).r*sin(swayTime*clothParams.y+clothParams.z+localPhase);
       shifted.x-=(h+c)/imageSize.x;
+      float foliageWeight=texture2D(advancedTex,base).g*(1.0-step(.001,texture2D(protectedTex,base).r));
+      float plant=foliageParams.x*foliageWeight*sin(swayTime*foliageParams.y+base.x*2.4+base.y*.7);
+      shifted-=vec2(plant,plant*.12)/imageSize;
       float safeRegion=texture2D(advancedTex,base).r*(1.0-step(0.001,texture2D(protectedTex,base).r));
       float phase=advancedTime*6.283185/advancedParams.w;
       if(advancedParams.x>1.5 && advancedParams.x<2.5){
@@ -90,7 +94,7 @@
   const buffer=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
   gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
   const attr=gl.getAttribLocation(program,'a'); gl.enableVertexAttribArray(attr); gl.vertexAttribPointer(attr,2,gl.FLOAT,false,0,0);
-  const uniforms={}; ['mouse','imageSize','viewport','amplitude','overscan','cloudAmplitude','cloudPhase','hairParams','clothParams','swayTime','displayRect','advancedParams','advancedTime','audioLevel'].forEach(k=>uniforms[k]=gl.getUniformLocation(program,k));
+  const uniforms={}; ['mouse','imageSize','viewport','amplitude','overscan','cloudAmplitude','cloudPhase','hairParams','clothParams','foliageParams','swayTime','displayRect','advancedParams','advancedTime','audioLevel'].forEach(k=>uniforms[k]=gl.getUniformLocation(program,k));
   gl.uniform4f(uniforms.displayRect,...display);
   gl.uniform2f(uniforms.imageSize,m.canvas.width,m.canvas.height);
   gl.uniform1f(uniforms.amplitude,m.parallax.amplitude_px);
@@ -138,7 +142,7 @@
     texture((boot.regions||{}).hair_sway||boot.black||boot.depth,3,'hairTex'),
     texture((boot.regions||{}).cloth_sway||boot.black||boot.depth,4,'clothTex'),
     texture((boot.regions||{}).protected||boot.black||boot.depth,5,'protectedTex'),
-    texture((boot.regions||{})[advanced?.region]||boot.black,6,'advancedTex'),
+    texture(boot.effect_texture||(boot.regions||{})[advanced?.region]||boot.black,6,'advancedTex'),
     texture(options?.audio.region==='full'?boot.white:(boot.regions||{})[options?.audio.region]||boot.black,7,'audioTex'),
     effects?effects.ready:Promise.resolve()]).then(()=>{
     resize(); state.status='ready'; const start=performance.now();let last=start,lastDraw=-Infinity;
@@ -154,6 +158,8 @@
       gl.uniform1f(uniforms.cloudPhase,cloud?state.time*2*Math.PI/cloud.period_seconds:0);
       gl.uniform1f(uniforms.cloudAmplitude,cloud && state.effectsEnabled && !media.matches?cloud.amplitude_px*cloud.intensity:0);
       gl.uniform1f(uniforms.swayTime,state.time);
+      gl.uniform3f(uniforms.foliageParams,foliage && state.effectsEnabled && !media.matches?foliage.amplitude_px*foliage.intensity:0,
+        foliage?2*Math.PI/foliage.period_seconds:0,0);
       const advancedEnabled=advanced && state.shaderEnabled && !media.matches;
       gl.uniform4f(uniforms.advancedParams,advancedEnabled?(/*S2L_SHADER_MODES*/).indexOf(advanced.preset):0,
         advancedEnabled?advanced.strength:0,advanced?.amplitude_px||0,advanced?.period_seconds||8);

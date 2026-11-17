@@ -79,7 +79,7 @@ def test_generate_integrity_versions(sources,tmp_path):
     assert validate_output(root)['structural_status']=='failed'
 
 
-@pytest.mark.parametrize('version',['0.1.0','0.2.0','0.3.0','1.0.0rc1','1.0.0','unknown'])
+@pytest.mark.parametrize('version',['0.1.0','0.2.0','0.3.0','1.0.0rc1','1.0.0','1.0.1','unknown'])
 def test_project_version_compatibility(sources,tmp_path,version):
     root,_=generate(sources[0],tmp_path/'out',depth_map=sources[1])
     manifest=read_json(root/'manifest.json')

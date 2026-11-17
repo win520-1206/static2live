@@ -34,18 +34,18 @@
     "depth": {
       "frames": 96,
       "duration_seconds": 8,
-      "mean_frame_difference": 0.6969238683127572,
-      "sha256": "deb592278e503ba1de18e624293b2469320bcbc600627eceeeff811b020c56d0",
-      "webp_sha256": "94f52e9b28bc9c92963f8ff1de5124aaf0874454694662238e40e51ad2b9ca60",
-      "manifest_sha256": "5cea8d30b6f3d2f2078a5b2a6a1277cd2acf09c4faf3fd6fe0e35b056aba162f"
+      "mean_frame_difference": 4.245729809670782,
+      "sha256": "2383af8f2760b2ddf319dfa932b912ff7c5718fc7b6e38efc136b97bab25ce1d",
+      "webp_sha256": "75a5858b1b2f911855ed1e4fc8fb73771b4059fe63be522d0832376cf67f706b",
+      "manifest_sha256": "b440c51ba0da7920c004aa54bb7747c13bd0218bcd0ec8f28e1557cb3ca9a6b7"
     },
     "portrait": {
       "frames": 60,
       "duration_seconds": 5,
-      "mean_frame_difference": 0.49306970164609054,
-      "sha256": "a0ecd775bac7684798403c18dcfedb958e941aaccc29bf2eb46a83f29d6dbc14",
-      "webp_sha256": "08ddbb26a853a4eb97d49e810846d857f56c51670fc8bc1f7209630119e75b1d",
-      "manifest_sha256": "134e87aa73a72fbd355b325af48199c08b44d1c13aaa55b5f57255a53a4b651f"
+      "mean_frame_difference": 0.6806828703703703,
+      "sha256": "9221e7d41692969fb73fc25457e09d1356d6d17374c8a54a1a5fc09bca7e9615",
+      "webp_sha256": "bc966f72cff8088ad6f90c2e68c3ae93847bb1c96deb21c5c8fcb1659e695231",
+      "manifest_sha256": "25501484cbc6f0ba6e25e92423dd5497675f72ffc74356a4640ac9ca7d8713f0"
     },
     "particles": {
       "frames": 60,

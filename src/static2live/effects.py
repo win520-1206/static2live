@@ -4,7 +4,7 @@ import math
 import jsonschema
 
 REGIONS = ['person','sky','water','cloud','glow','other','face','hands','hair','cloth','body','protected','hair_sway','cloth_sway']
-KINDS = ['rain','snow','dust','fog','glow','cloud_drift']
+KINDS = ['rain','snow','dust','fog','glow','cloud_drift','foliage_sway']
 DEFAULT = dict(enabled=True,intensity=.35,count=60,speed_px_s=12.,size_px=2.,
                color='#ffd6a0',region='full',exclude_person=False,period_seconds=8.,amplitude_px=2.)
 SCHEMA = {'type':'object','additionalProperties':False,'required':['type',*DEFAULT],
@@ -17,6 +17,7 @@ SCHEMA = {'type':'object','additionalProperties':False,'required':['type',*DEFAU
             'region':{'enum':['full',*REGIONS]},'exclude_person':{'type':'boolean'},
             'period_seconds':{'type':'number','minimum':2,'maximum':120},
             'amplitude_px':{'type':'number','minimum':0,'maximum':20}}}
+SCHEMA['properties']['softness']={'type':'number','minimum':0,'maximum':1}
 
 
 def complete_effect(raw):
@@ -28,6 +29,7 @@ def complete_effect(raw):
     if raw['type']=='fog': effect.update(count=8,size_px=30,speed_px_s=6,intensity=.15,color='#edf1f5')
     if raw['type']=='glow': effect.update(region='glow',count=0,intensity=.15)
     if raw['type']=='cloud_drift': effect.update(region='cloud',count=0,intensity=.5)
+    if raw['type']=='foliage_sway': effect.update(region='other',count=0,intensity=.7,amplitude_px=3,period_seconds=8)
     effect.update(raw)
     validate_effect(effect)
     return effect
@@ -39,6 +41,10 @@ def validate_effect(effect):
         raise ValueError('效果数值必须有限')
     if effect['type']=='cloud_drift' and effect['region']!='cloud':
         raise ValueError('Cloud Drift 只允许确认的 cloud 区域，不等同 sky')
+    if effect['type']=='foliage_sway' and (effect['region']!='other' or effect['amplitude_px']>4):
+        raise ValueError('Foliage Sway需明确other植物权重区域，幅度上限4画布像素')
+    if 'softness' in effect and effect['type']!='dust':
+        raise ValueError('softness仅适用于Web暖尘')
 
 
 def validate_effects(effects):
