@@ -1,0 +1,6 @@
+{
+  "model_id": "depth-anything/Depth-Anything-V2-Small-hf",
+  "revision": "5426e4f0f36572d16453bbda7a8389317b1bef99",
+  "depth_sha256": "2ca0a0f1ec8707b8988f521089e1089238cbff79c9aa91fcfaec95711775ad77",
+  "source_sha256": "401223c8eb0bce32f85fae5d6fd0efc1f4891606580c40e4a98c49bc53e11053"
+}

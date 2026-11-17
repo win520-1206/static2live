@@ -1,6 +1,6 @@
 include SKILL.md
 include README_EN.md
-recursive-include assets/demo *.gif *.png *.json *.md
+recursive-include assets/demo *.gif *.webp *.png *.json *.md
 recursive-include references *.md
 recursive-include docs *.md
 recursive-include examples *.py

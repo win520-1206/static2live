@@ -1,27 +1,57 @@
 {
-  "license": "CC0-1.0",
   "runtime": "Static2Live Web",
-  "depth": "explicit synthetic depth",
-  "regions": "explicit procedural masks",
-  "capture": "Chromium + SwiftShader; 768x512; 60 actual rendered frames",
+  "dimensions": [
+    960,
+    540
+  ],
+  "capture": "Chromium + SwiftShader; 60 actual rendered frames; 12 FPS; 5 seconds",
+  "depth_source": "Depth Anything V2 Small model inference; supplied map for reproduction",
+  "depth_model": {
+    "model_id": "depth-anything/Depth-Anything-V2-Small-hf",
+    "revision": "5426e4f0f36572d16453bbda7a8389317b1bef99",
+    "depth_sha256": "2ca0a0f1ec8707b8988f521089e1089238cbff79c9aa91fcfaec95711775ad77",
+    "source_sha256": "401223c8eb0bce32f85fae5d6fd0efc1f4891606580c40e4a98c49bc53e11053"
+  },
+  "portrait_regions": "Model-derived, user-corrected regions imported into Lite",
+  "image_sources": {
+    "landscape": "AI-generated image, built-in image_gen",
+    "particles": "AI-generated image, built-in image_gen",
+    "portrait": "User-supplied photograph; authorized project README display"
+  },
+  "source_sha256": {
+    "landscape-source.png": "401223c8eb0bce32f85fae5d6fd0efc1f4891606580c40e4a98c49bc53e11053",
+    "particle-source.png": "aaf82e27bdd5c32332deeedcacdac6e9c6cc41735a1459d7be02d70adc41229d",
+    "portrait-source.png": "4bf4b1d0405d6d750362791cb28d82498078b6877ea4074b24f6474ef66be707",
+    "depth-map.png": "2ca0a0f1ec8707b8988f521089e1089238cbff79c9aa91fcfaec95711775ad77"
+  },
   "demos": {
     "depth": {
       "frames": 60,
       "duration_seconds": 5,
-      "mean_frame_difference": 0.3220740424262153,
-      "sha256": "0b5e51bc72062246a8783257d1a45285369d6bd18254f8cbcdefc02fe4d7fc72"
+      "mean_frame_difference": 8.586673739711934,
+      "sha256": "0984413f7f9efa44c5a336a6f386fe4571fbaf6fef40c048f21c992834b4e0b3",
+      "webp_sha256": "3c6f55b74709858f23cbecadad14fa20fb89ed5a8e3518bd85227863a80e7482",
+      "manifest_sha256": "8b9a5dd5a974f8bb04f69ca8288c3f46a4ba41e226496e36a6ccf52107995bb8"
     },
     "portrait": {
       "frames": 60,
       "duration_seconds": 5,
-      "mean_frame_difference": 0.21353658040364584,
-      "sha256": "16e7e393719b6c6ac6c7005ac466ae946d711ddb9866ff9ed6100e1ada0ce99b"
+      "mean_frame_difference": 0.49306970164609054,
+      "sha256": "a0ecd775bac7684798403c18dcfedb958e941aaccc29bf2eb46a83f29d6dbc14",
+      "webp_sha256": "08ddbb26a853a4eb97d49e810846d857f56c51670fc8bc1f7209630119e75b1d",
+      "manifest_sha256": "134e87aa73a72fbd355b325af48199c08b44d1c13aaa55b5f57255a53a4b651f"
     },
     "particles": {
       "frames": 60,
       "duration_seconds": 5,
-      "mean_frame_difference": 1.1454442342122395,
-      "sha256": "9b63a86ad4c92eb30b5143b57f77a3856300208c677847aea5a27962c372d8f2"
+      "mean_frame_difference": 0.45613747427983536,
+      "sha256": "d5bbdfc44903a7a6d37bc9b42f7eb326eb5bfce2e6285085f378a1e6dcb5f190",
+      "webp_sha256": "9c9cb5206bcb9e809ea93571040e5710ff75777c894837ca50c13d854db57f3f",
+      "manifest_sha256": "6e2ef1147a8658978c3b3b6ec218b0180de2696e1df3e8efaa30ff0432868697"
     }
-  }
+  },
+  "gif_dimensions": [
+    768,
+    432
+  ]
 }

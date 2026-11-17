@@ -17,4 +17,4 @@ V0.2 Smart：[SegFormer B0 ADE](https://huggingface.co/nvidia/segformer-b0-finet
 
 `models prepare` 记录实际下载的提交 revision、模型许可标识和 config / preprocessor / weights / README 文件 SHA-256。保留模型卡与其要求；模型权重并非本项目代码，不以 MIT 重新许可，不提交到项目仓库。使用和再分发时应自行确认官方最新条款及 Apache-2.0 的通知义务。
 
-安装软件依赖首次需要网络，显式模型准备需要网络；生成与 Web 播放不需要网络，不发送照片。示例图由程序生成，CC0。用户照片仅本机验收，公开发布需另有图片与肖像授权，本项目未公开发布。
+安装软件依赖首次需要网络，显式模型准备需要网络；生成与Web播放不需要网络。程序生成的测试图保持CC0。README中的人像样例已由用户授权本项目公开展示，AI生成的风景及街景作为演示底图；这些图像与衍生动图的权利独立于MIT代码许可，具体范围见[演示素材说明](../assets/demo/README.md)。其他用户照片继续保留本地，公开展示按各自授权处理。

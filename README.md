@@ -10,25 +10,25 @@ Static2Live 在本地分析图片，通过深度、区域蒙版和程序化运�
 
 [快速开始](#快速开始) · [核心功能](#核心功能) · [工作原理](#工作原理) · [文档](#文档)
 
-![Web 深度视差演示](assets/demo/depth-parallax.gif)
+![Web 深度视差演示](assets/demo/depth-parallax.webp)
 
-Web 运行时实际录制。程序生成的 CC0 风景配合显式已知深度，指针左右移动时近远区域产生不同位移。此演示使用 Lite 与外部深度图。[原始图片](assets/demo/landscape-source.png)
+Web 运行时实际录制。AI 生成的写实湖畔山景经过本地 Depth Anything V2 Small 深度估计，指针左右移动时近远区域产生不同位移。复现使用 Lite 与随素材提供的模型估计深度图。[静态底图](assets/demo/landscape-source.png)
 
 ## 效果展示
 
 ### 局部运动与保护
 
-![局部发梢运动示意](assets/demo/portrait-motion.gif)
+![真实人像的发梢与衣料微动态](assets/demo/portrait-motion.webp)
 
-程序绘制的人物示意，使用 Lite、显式头发区域和面部保护蒙版，在 Web 中演示发梢局部 UV 运动。蒙版由示例代码提供，人物模型准确度另有真实照片验收记录。[原始图片](assets/demo/portrait-source.png)
+使用用户授权的真实样例照片，沿用人物解析后经用户修正的区域，在 Web 中呈现发梢、衣料微动态和暖尘。面部保护区域保持稳定，录制时指针停在中央。复现以 Lite 导入这些区域。[缩小后的展示底图](assets/demo/portrait-source.png)
 
 ### 环境粒子
 
-![Web 雪粒子效果](assets/demo/particle-effects.gif)
+![Web 雪粒子效果](assets/demo/particle-effects.webp)
 
-同一幅风景上的程序化雪粒子，使用 Lite 与 Web Canvas。素材和全部动态帧由本项目生成。
+AI 生成的写实冬日街景，叠加 Lite 与 Web Canvas 的动态降雪。底图保留静态积雪，空中飘落的雪粒子由运行时绘制。[静态底图](assets/demo/particle-source.png)
 
-三组 GIF 均录制自实际 Web 运行时，统一为 768×512、约 12 FPS、5 秒。深度和区域属于显式测试数据，来源与复现步骤见[演示说明](assets/demo/README.md)。
+三组动图均录制自实际 Web 运行时，统一为 960×540、约 12 FPS、5 秒。首页使用动态 WebP 保留照片色彩，同目录提供 GIF。底图、深度、区域来源和复现步骤见[演示说明](assets/demo/README.md)。
 
 ## 项目简介
 
@@ -200,7 +200,7 @@ $env:STATIC2LIVE_BROWSER_TESTS = '1'
 
 - [x] 1.0 分析、规划、双目标输出与验证闭环。
 - [x] 人工区域编辑、Smart 真实模型和已受验人物微动态。
-- [ ] 扩充可公开的真实照片演示及人物边缘案例。
+- [ ] 扩充多种真实照片及人物边缘案例。
 - [ ] 补齐原生硬件性能测量与多屏连续拼接测试。
 - [ ] 独立 Agent 的 skill 行为评估。
 - [ ] 逐步完善原生支持矩阵、CI 与发行流程。
@@ -212,7 +212,8 @@ $env:STATIC2LIVE_BROWSER_TESTS = '1'
 | 资源 | 许可与来源 |
 | --- | --- |
 | Static2Live 代码 | [MIT](LICENSE) |
-| README 演示图及 GIF | 本项目程序生成，CC0，见[素材说明](assets/demo/README.md) |
+| README 人像照片及衍生动图 | 用户授权本项目展示，图片再利用须确认权利人许可，见[素材说明](assets/demo/README.md) |
+| README 风景/街景底图及衍生动图 | AI 生成底图与真实运行时动画，图片权利独立于代码许可，见[来源与提示词](assets/demo/prompts.md) |
 | Depth Anything V2 Small HF | Apache-2.0，按[官方模型卡](https://huggingface.co/depth-anything/Depth-Anything-V2-Small-hf)与实际缓存记录使用 |
 | SegFormer B0 ADE | NVIDIA SegFormer 许可，限非商业研究/评估，见[官方模型卡](https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512) |
 | FASHN Human Parser | NVIDIA SegFormer 许可，限非商业研究/评估，见[官方模型卡](https://huggingface.co/fashn-ai/fashn-human-parser) |
