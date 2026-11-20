@@ -2,59 +2,41 @@
 
 [简体中文](README.md) | [English](README_EN.md)
 
-**把静态图片变成可交互动态壁纸。**
+**让静态图片动起来。**
 
-Static2Live 在本地分析图片，通过深度、区域蒙版和程序化运动生成实时壁纸。支持离线 Web 与可选的 Wallpaper Engine 原生场景输出。
+在本地分析图片，用实时渲染把静态图变成可交互的动态壁纸。
 
-`v1.0.1` · Python 3.10+ · MIT 代码许可
+![人像壁纸预览，发梢、衣料与暖色粒子轻动](assets/demo/portrait-motion.webp)
 
-[快速开始](#快速开始) · [核心功能](#核心功能) · [工作原理](#工作原理) · [文档](#文档)
+Web 实录 · 发梢轻摆、衣料微动、暖色粒子漂浮，脸部保持稳定。
 
-![湖水与远处云雾微动态](assets/demo/depth-parallax.webp)
+`Python 3.10+` · `WebGL` · `Depth Estimation` · [MIT 代码许可](LICENSE)
 
-Web 运行时实际录制。湖景的花草轻摆、水面波纹和云雾缓动分别使用独立权重区域，石头及木屋设有保护蒙版。预览指针固定在中央，交互工程仍支持小幅鼠标视差。复现使用 Lite、模型估计深度图及明确的区域蒙版。[静态底图](assets/demo/landscape-source.png)
+[快速开始](#快速开始) · [效果展示](#效果展示) · [功能状态](#功能状态与限制) · [文档](#文档)
 
-## 效果展示
+## Static2Live 是什么？
 
-### 局部运动与保护
-
-![真实人像的发梢与衣料微动态](assets/demo/portrait-motion.webp)
-
-使用用户授权的真实样例照片，沿用人物解析后经用户修正的区域，在 Web 中呈现发梢、衣料微动态和更清晰的柔边暖尘。粒子外观参照此前认可的原生效果，面部保护区域保持稳定。复现以 Lite 导入这些区域。[缩小后的展示底图](assets/demo/portrait-source.png)
-
-### 环境粒子
-
-![Web 雪粒子效果](assets/demo/particle-effects.webp)
-
-AI 生成的写实冬日街景，叠加 Lite 与 Web Canvas 的动态降雪。底图保留静态积雪，空中飘落的雪粒子由运行时绘制。[静态底图](assets/demo/particle-source.png)
-
-三组动图均录制自实际 Web 运行时，统一为 960×540、约 12 FPS，湖景 8 秒、人像与雪景各 5 秒。首页使用动态 WebP 保留照片色彩，同目录提供 GIF。底图、深度、区域来源和复现步骤见[演示说明](assets/demo/README.md)。
-
-## 项目简介
-
-输入一张图片后，Static2Live 统一方向、尺寸与裁切坐标，读取本地深度模型、区域模型或用户蒙版，再生成可检查的运动规划和资源清单。WebGL 和 Canvas 根据这些资源实时响应指针和时间。
-
-Python 包与 CLI 负责分析和生成。附带的薄 skill 将自然语言要求映射为 Preset、区域和参数，调用同一套 CLI。你也可以直接使用命令行或 YAML。
+Static2Live 使用深度、语义区域或手工蒙版规划运动，再由 WebGL 和 Canvas 根据指针与时间实时渲染。生成结果可离线在浏览器中打开，也可在具备本机依赖时导出 Wallpaper Engine 原生场景。你可以用 CLI、YAML 或附带的 skill 设置效果。
 
 ## 核心功能
 
-| 功能 | 可以做什么 | 1.0 状态 |
-| --- | --- | --- |
-| 深度视差 | 以局部 UV 位移和有界采样响应鼠标 | 已实现，真实照片与浏览器验证 |
-| Lite | 手工区域、规则候选、可选外部深度 | 已实现，关闭视差可完全无模型 |
-| Smart | 本地预测人物、天空、水面，支持人物细分类 | 已实现，预测需检查及按需修正 |
-| 发梢与衣料 | 根部锚定、局部权重及保护区域 | 已实现，已有对应照片用户反馈 |
-| 粒子与区域效果 | 雨雪尘雾、Glow、Cloud Drift、独立植物摆动 | Web 已实现，原生支持范围见下文 |
-| 离线区域编辑 | 画笔、擦除、保护、运动源、撤销及缩放 | 已实现，编辑后重新生成 |
-| 自动规划 | 根据区域证据推荐 Preset 与保守运动参数 | 已实现，显式用户配置优先 |
-| 高级运行时 | 可选音频响应、性能档、虚拟 viewport、局部 Shader | 已实现，验收与宿主支持分别记录 |
-| 原生 Adapter | 使用本机合法模板与编译器输出完整场景依赖 | 已实现，依赖 Wallpaper Engine 环境 |
+- **深度视差**　根据图像深度，让不同区域以不同幅度响应指针。
+- **局部动效**　用区域蒙版控制发梢、衣料、植物、水波和云雾，并叠加环境粒子。
+- **本地 AI 分析**　Smart 模式用本地模型识别人物、天空和水面。Lite 支持手工区域或规则候选。
+- **Wallpaper Engine 原生导出**　借助本机 Wallpaper Engine、场景模板和编译器生成可在宿主中打开的场景。
 
 ## 快速开始
 
-安装依赖首次需要联网。准备模型需要显式下载，生成与 Web 播放可离线运行。以下命令从仓库根目录执行。
+准备 Python 3.10+，进入仓库根目录并激活 Python 环境。把 `photo.jpg` 换成你的图片路径。这个 Lite 示例关闭视差，无需准备模型。
 
-### A. 先体验粒子，无需模型
+```bash
+pip install .
+static2live photo.jpg --mode lite --no-parallax --effect dust
+```
+
+首次生成后，打开 `output/photo/v001/index.html` 查看暖色粒子，检查结果见同目录的 `validation.json`。
+
+### 从零开始复现公开样例
 
 Windows PowerShell，Python 3.10+。
 
@@ -69,11 +51,31 @@ python -m venv .venv
 
 首次结果位于 `output/landscape-source/v001/`。双击其中的 `index.html` 查看，检查报告保存在 `validation.json`。再次生成会得到 `v002/` 等新目录。
 
-PyPI 连接缓慢时，可在本次安装命令末尾加 `--index-url https://pypi.tuna.tsinghua.edu.cn/simple` 使用清华镜像。本轮干净环境安装采用该镜像验证完成。
+PyPI 连接缓慢时，可在本次安装命令末尾加 `--index-url https://pypi.tuna.tsinghua.edu.cn/simple` 使用清华镜像。
 
 Linux/macOS 可用 `.venv/bin/python` 替换 Python 路径。当前实际宿主验收来自 Windows，原生 Adapter 面向本机 Wallpaper Engine 安装环境。
 
-### B. 准备本地模型，体验深度视差
+## 效果展示
+
+### 湖景 · 花草、水波与云雾
+
+![湖景前景花草轻摆，湖面泛起波纹，远处云雾缓动](assets/demo/depth-parallax.webp)
+
+花草、水面和云雾使用独立区域，石头和木屋受保护。录制时指针固定在中央，交互版本支持小幅鼠标视差。复现使用 Lite、模型估计深度图和区域蒙版。[静态底图](assets/demo/landscape-source.png)
+
+### 雪景 · 环境粒子
+
+![冬日街景中的动态降雪](assets/demo/particle-effects.webp)
+
+写实街景底图由 AI 生成，空中雪花由 Lite 和 Web Canvas 实时绘制。[静态底图](assets/demo/particle-source.png)
+
+首屏人像使用获准公开展示的照片。人物解析区域经人工修正后导入 Lite，Web 柔边暖尘参照此前认可的原生效果调整。[人像展示底图](assets/demo/portrait-source.png)
+
+三组动图均录制自 Web 运行时，为 960×540、约 12 FPS。湖景 8 秒，人像和雪景各 5 秒。同目录提供兼容 GIF、素材来源和复现步骤。[演示素材与复现](assets/demo/README.md)
+
+## 模型与进阶用法
+
+### 准备本地深度模型
 
 沿用上一步虚拟环境，安装 PyTorch、Transformers 等可选依赖，再显式准备深度模型。
 
@@ -89,27 +91,15 @@ Linux/macOS 可用 `.venv/bin/python` 替换 Python 路径。当前实际宿主�
 
 生成失败时先查看 CLI 错误及 `validation.json`，再读[工作流](references/workflow.md)或[原生排错](references/native-qa.md)。
 
-## 工作原理
+### Smart、手工区域与原生输出
 
-```mermaid
-flowchart TD
-    A[静态图片] --> B[方向、尺寸与裁切对齐]
-    B --> C[可选本地深度估计]
-    B --> D[Smart 区域与人物解析]
-    B --> E[Lite 人工或规则区域]
-    C --> F[自动分析与 Motion Planner]
-    D --> F
-    E --> F
-    F --> G[Motion Manifest 与资源]
-    G --> H[WebGL / Canvas]
-    G --> I[可选 Wallpaper Engine Adapter]
-    H --> J[分层 Validator 与验收报告]
-    I --> J
+首次使用 Smart 需安装 `.[smart]` 依赖，并在阅读和接受对应模型许可后显式准备分割模型。下方 Smart 示例启用了视差，需要先完成深度模型准备。使用 `--human-parsing` 时还需单独准备人物解析模型。
+
+```powershell
+pip install ".[smart]"
+static2live models prepare --kind segmentation --model-cache models --accept-model-license
+static2live models prepare --kind human-parsing --model-cache models --accept-model-license
 ```
-
-`analyzer.py` 统一像素与区域来源，`planning.py` 推荐运动，`motion.py` 描述画布和参数。Renderer 消费生成资源，Adapter 处理宿主依赖，Validator 核对配置、哈希及运行证据。详细实现见[自动规划](docs/V1.0_IMPLEMENTATION.md)。
-
-## 常见用法
 
 下面用 `static2live` 表示已激活环境中的命令。也可替换为 `.\.venv\Scripts\python.exe -m static2live`。
 
@@ -131,9 +121,29 @@ static2live photo.jpg --mode smart --human-parsing --target wallpaper-engine --m
 static2live photo.jpg --crop-aspect 16:9 --crop-anchor top
 ```
 
-Smart 及人物解析首次需分别准备 segmentation 和 human-parsing 模型，并接受对应许可。具体命令见[人物解析](docs/V0.4_IMPLEMENTATION.md)和[完整工作流](references/workflow.md)。
+详见[完整工作流](references/workflow.md)与[人物解析](docs/V0.4_IMPLEMENTATION.md)。
 
 优先级为 CLI > 用户 YAML > 所选 Preset > 自动建议 > 默认值。`--strength` 的单位是画布短边比例，最大 `0.01`。发梢与衣料参数使用画布像素，详细单位见工作流。用户关闭效果或设置零强度会保留在配置中。
+
+## 工作原理
+
+```mermaid
+flowchart TD
+    A[静态图片] --> B[方向、尺寸与裁切对齐]
+    B --> C[可选本地深度估计]
+    B --> D[Smart 区域与人物解析]
+    B --> E[Lite 人工或规则区域]
+    C --> F[自动分析与 Motion Planner]
+    D --> F
+    E --> F
+    F --> G[Motion Manifest 与资源]
+    G --> H[WebGL / Canvas]
+    G --> I[可选 Wallpaper Engine Adapter]
+    H --> J[分层 Validator 与验收报告]
+    I --> J
+```
+
+`analyzer.py` 统一像素与区域来源，`planning.py` 推荐运动，`motion.py` 描述画布和参数。Renderer 消费生成资源，Adapter 处理宿主依赖，Validator 核对配置、哈希及运行证据。详细实现见[自动规划](docs/V1.0_IMPLEMENTATION.md)。
 
 ## 输出结构
 
@@ -169,6 +179,18 @@ output/landscape-source/v001/
 2026-11-17 的 1.0.1 安装包完整回归为 **225 项通过**，包含真实合成浏览器测试及植物/水波组合、柔边暖尘专项。1.0 历史源码包另有 28 项核心与 skill 工作流通过。当前修正见[1.0.1 说明](docs/V1.0.1.md)，真实照片、独立原生音频及实体双屏的证据范围见[1.0 说明](docs/V1.0_RELEASE.md)和[需求审计](docs/V1_REQUIREMENT_AUDIT.md)，原始私人素材及本机记录保留在维护者本机。
 
 ## 功能状态与限制
+
+| 功能 | 可以做什么 | 1.0.1 状态 |
+| --- | --- | --- |
+| 深度视差 | 以局部 UV 位移和有界采样响应鼠标 | 已实现，真实照片与浏览器验证 |
+| Lite | 手工区域、规则候选、可选外部深度 | 已实现，关闭视差可完全无模型 |
+| Smart | 本地预测人物、天空、水面，支持人物细分类 | 已实现，预测需检查及按需修正 |
+| 发梢与衣料 | 根部锚定、局部权重及保护区域 | 已实现，已有对应照片用户反馈 |
+| 粒子与区域效果 | 雨雪尘雾、Glow、Cloud Drift、独立植物摆动 | Web 已实现，原生支持范围见下文 |
+| 离线区域编辑 | 画笔、擦除、保护、运动源、撤销及缩放 | 已实现，编辑后重新生成 |
+| 自动规划 | 根据区域证据推荐 Preset 与保守运动参数 | 已实现，显式用户配置优先 |
+| 高级运行时 | 可选音频响应、性能档、虚拟 viewport、局部 Shader | 已实现，验收与宿主支持分别记录 |
+| 原生 Adapter | 使用本机合法模板与编译器输出完整场景依赖 | 已实现，依赖 Wallpaper Engine 环境 |
 
 - 相对深度用于有界原图采样，遮挡后的背景仍不可见。人物解析是粗类别预测，散发和边缘可能需要人工修正。
 - 自动推荐较保守。已认可的 Smart 样例整体自然、人物连续且脸稳定，默认衣料的独立可辨性仍需按素材确认。
