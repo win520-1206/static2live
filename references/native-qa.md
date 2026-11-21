@@ -6,7 +6,7 @@
 
 用户选择 wallpaper-engine 时先读 [V0.3 实施说明](../docs/V0.3_IMPLEMENTATION.md)，运行 generate --help。调用 `static2live IMAGE --target wallpaper-engine ...`；非标准安装用 --engine-path，合法同结构编辑器模板用 --we-template。不自行拼凑 scene.json 或制造假 .tex，不安装引擎或下载模板。
 
-读 manifest.adapter 的 requested/actual、native-plan.json 的 unsupported 和 validation.native_runtime。没有本机引擎/编译器/模板时保留 Web 并说明降级，不能称原生生成成功。真实编译错误不是成功降级；保留错误产物报告。Glow/Cloud Drift 和局部粒子未原生映射，不能强行宣称等效。
+先读 manifest.json 中 adapter 的 requested、actual 和 fallback_reason，再核对 validation.json 中的 native_runtime。缺少引擎、编译器或模板时，可能只生成 Web，且缺少 native-plan.json 和原生工程。此时根据 manifest 和验证报告解释降级，并交付 Web 入口。有 native-plan.json 时检查 unsupported。实际编译失败按错误报告。Glow、Cloud Drift 和局部粒子的原生支持范围以输出记录为准。
 
 仅显式用户确认的 other 蒙版可加 --native-sway，幅度由 --sway-amplitude-px 控制；默认关闭，不自动发丝/人物分析，不作用整图。模板、着色器、引擎许可与项目 MIT 分开，不将本机引擎资源作为公开示例。
 

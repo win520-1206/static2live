@@ -12,7 +12,7 @@
 | 雨 / 雪 / 水面微波 | rainy_city / snow_soft；water_ripple必须已有water区域。不按颜色猜天气或把天空等同云层 |
 | 动漫氛围 / 雪林 / 霓虹 | anime_chill / snow_forest / cyberpunk只是运动与灯光风格，不重画人物。cyberpunk的neon_pulse需非空glow；雪林不冒称自动识别树或自动光线追踪 |
 | 鼠标跟随轻一点 | --strength为短边比例，上限.01；用户要求像素时先除以画布短边，不能当作0–100强度 |
-| 花草轻摆、石头固定 | Web可用foliage_sway与明确other植物权重，根部降低权重，石头设protected；可与water_ripple并行，原生范围读native-plan |
+| 花草轻摆、石头固定 | Web可用foliage_sway与明确other植物权重，根部降低权重，石头设protected；可与water_ripple并行，原生范围见已生成的 native-plan，降级原因见 manifest.adapter |
 | 暖尘更明显、更柔和 | 调整dust的intensity、size_px与count，可显式设置Web softness；先检查人物排除和亮背景上的实际可见度，原生有自身尺寸/透明度换算 |
 | 跟随音乐 | 仅显式请求时audio.enabled；先说明输入来源。默认无音频，不请求麦克风、不自动播放测试声 |
 | 局部轻浮动、平移、缩放、旋转或波动 | 读取[运动原语](../docs/MOTION_PRIMITIVES.md)，用shader.preset选择float/pan/zoom/rotate/wave/distortion；须有明确other蒙版，不擅自作用整图或人脸 |

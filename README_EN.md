@@ -163,7 +163,7 @@ output/landscape-source/v001/
 
 `index.html` is the offline Web entry point. `assets/` stores the image and applicable depth/maps. `analysis.json` records provenance and recommendations, `motion.json` describes animation, `manifest.json` records versions and hashes, and `validation.json` stores check results.
 
-Native exports add `native-plan.json` and `wallpaper-engine/project.json`. Missing engine/template/compiler prerequisites retain Web output with `actual:web` and a warning. Actual compilation failures raise errors. Consult `native-plan.json` for mapped native particles/properties and unsupported features.
+Successful native exports add `native-plan.json` and `wallpaper-engine/project.json`. Missing engine, template, or compiler prerequisites may yield Web output only. Check `actual: web` and `fallback_reason` under `adapter` in `manifest.json`. Compilation failures raise errors. When a native plan is present, it lists particle and property mappings and unsupported features.
 
 ## Validation
 
@@ -197,7 +197,7 @@ The installed 1.0.1 regression on 2026-11-17 passed **225 tests**, including rea
 - Native mapping covers parallax, human local motion, full-canvas rain/snow/dust/fog, properties, and optional audio/shaders. Web features such as local particles, Glow, and Cloud Drift are handled according to native unsupported records. Appearance can differ between targets.
 - Web supports performance profiles and normalized virtual viewports. Native performance and cropping are host-managed. Precise native hardware FPS, VRAM, and multi-instance clock synchronization still need measurement or acceptance.
 - Future scope includes automatic tree recognition, independent light rays, fine hair Alpha Matting, background completion, facial expressions, and video export.
-- Skill evidence includes actual primary-Agent usage and runnable CLI recipes. Independent Agent behavioral evaluation remains pending.
+- An independent agent exercised three skill workflows: model-free Web generation, Smart with a missing model, and native export with a missing host. See the [1.0.1 notes](docs/V1.0.1.md#独立-skill-验收).
 
 ## Development and tests
 
@@ -224,8 +224,8 @@ Report reproduction steps, version, configuration, and target in [Issues](https:
 - [x] Manual region editing, real Smart models, and accepted portrait micro-motion.
 - [ ] Expand the variety of real photos and human-edge cases.
 - [ ] Measure native hardware performance and test continuous multi-display composition.
-- [ ] Independently evaluate skill behavior with another Agent.
-- [ ] Improve the native support matrix, CI, and release workflow.
+- [x] Independently evaluate three skill workflows with another agent.
+- [ ] Expand the native support matrix and release automation.
 
 ## Privacy, licenses, and credits
 

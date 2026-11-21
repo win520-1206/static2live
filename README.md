@@ -163,7 +163,7 @@ output/landscape-source/v001/
 
 `index.html` 是离线 Web 入口，`assets/` 保存图像及按需生成的深度和蒙版。`analysis.json` 记录来源与推荐，`motion.json` 记录动画，`manifest.json` 记录版本与资源哈希，`validation.json` 保存检查状态。
 
-原生目标另有 `native-plan.json` 和 `wallpaper-engine/project.json`。无可用引擎、模板或编译器时保留 Web 输出，并记录 `actual:web` 和 warning。实际编译错误会报错。原生粒子及属性支持、未映射项以 `native-plan.json` 为准。
+成功导出原生场景时还会生成 `native-plan.json` 和 `wallpaper-engine/project.json`。缺少引擎、模板或编译器时，可能只生成 Web。此时在 `manifest.json` 的 `adapter` 中查看 `actual: web` 与 `fallback_reason`。实际编译失败会报错。已生成原生计划时，查阅其中的粒子、属性和未映射项。
 
 ## 验证体系
 
@@ -197,7 +197,7 @@ output/landscape-source/v001/
 - 原生已接入视差、人物局部运动、全画布雨雪尘雾、属性及可选音频/Shader。局部粒子、Glow、Cloud Drift 等 Web 能力按原生输出的 unsupported 记录处理，两个运行目标呈现可能存在差异。
 - Web 支持性能档与归一化虚拟 viewport；原生性能和裁切由宿主管理。精确原生硬件 FPS、显存及多实例时钟同步仍缺测量或验收。
 - 后续范围包括树木自动识别、独立光线束、精细发丝 Alpha Matting、背景补全、表情和视频导出。
-- skill 已有实际主 Agent 使用与 CLI 配方测试，独立 Agent 行为评估尚待执行。
+- skill 已完成三项独立 Agent 工作流验收，覆盖无模型 Web、Smart 缺模型和原生缺宿主。详见[1.0.1 说明](docs/V1.0.1.md#独立-skill-验收)。
 
 ## 开发与测试
 
@@ -224,8 +224,8 @@ $env:STATIC2LIVE_BROWSER_TESTS = '1'
 - [x] 人工区域编辑、Smart 真实模型和已受验人物微动态。
 - [ ] 扩充多种真实照片及人物边缘案例。
 - [ ] 补齐原生硬件性能测量与多屏连续拼接测试。
-- [ ] 独立 Agent 的 skill 行为评估。
-- [ ] 逐步完善原生支持矩阵、CI 与发行流程。
+- [x] 独立 Agent 的三项 skill 工作流验收。
+- [ ] 扩充原生支持矩阵与自动化发布覆盖。
 
 ## 隐私、许可与致谢
 

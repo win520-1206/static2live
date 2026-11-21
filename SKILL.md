@@ -20,7 +20,7 @@ license: MIT
 1. 核对用户图片、风格、输出目标及现有区域/配置。运行 `static2live --version` 和相关子命令 `--help` 确认安装能力；缺安装时说明[安装方式](README.md)，不自动更改用户环境。
 2. 默认轻量程序化。Lite不调用分割；完全无模型还须 `--no-parallax`。真实视差需已准备深度模型或匹配原输入尺寸的 `--depth-map`；Smart和人物解析需对应本地模型。缺模型明确报错，不假深度、不静默换模式。
 3. 用 `static2live IMAGE --config CONFIG --output OUTPUT` 生成独立版本。自动规划只补未指定项；优先级CLI > 用户YAML > Preset > 自动建议 > 默认。明确的关闭、0和空列表必须保留。先解释不能实现的请求，不用整图晃动冒充发梢或粒子。
-4. 读取analysis.json、motion.json、manifest.json、validation.json；原生另读native-plan.json的actual/unsupported。检查输出与当前Manifest一致。缺引擎/模板可保留Web降级；真实编译错误不是原生成功。
+4. 读取 analysis.json、motion.json、manifest.json 和 validation.json。对原生请求，先检查 manifest.adapter 的 requested、actual 和 fallback_reason。仅当存在 native-plan.json 时读取其 unsupported。若 actual 为 web，交付 Web 入口并说明降级原因和原生验收状态。实际编译失败按错误报告。
 5. 在允许的目标环境实际检查显示、鼠标四角、局部运动、保护区、粒子及开关/零强度。通过后才按参考文档调用record-visual或record-native。工具策略受限不绕过，保留未测项。
 6. 交付明确版本路径、已验证范围及未通过项。报告“文件已生成”与“完整验收通过”有区别：结构、浏览器功能、主观视觉、原生宿主和能力分项须分别有证据，不能用返回码或旧版本用户反馈替代。
 
